@@ -5,7 +5,8 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { motion, AnimatePresence } from "framer-motion";
 import { KanbanCard } from "./KanbanCard";
 import { RoomWithMetadata } from "@/config";
-import { createIssueWithProgress } from "@/actions/liveblocks";
+import { useWorkspace } from "./WorkspaceContext";
+import { useSpace } from "./SpaceContext";
 import { useState } from "react";
 
 interface KanbanColumnProps {
@@ -31,6 +32,8 @@ interface KanbanColumnProps {
 export function KanbanColumn({ id, title, icon, color, items, type }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
   const [isCreating, setIsCreating] = useState(false);
+  const { currentWorkspace } = useWorkspace();
+  const { currentSpace } = useSpace();
 
   const handleCreateItem = async () => {
     if (isCreating) return; // Prevent multiple clicks
@@ -43,7 +46,12 @@ export function KanbanColumn({ id, title, icon, color, items, type }: KanbanColu
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ progress: id }),
+          body: JSON.stringify({ 
+            workspace_id: currentWorkspace?.id,
+            space_id: currentSpace?.id || null,
+            status: id,
+            title: 'Untitled'
+          }),
         });
         
         if (response.ok) {

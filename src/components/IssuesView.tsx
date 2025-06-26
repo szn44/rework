@@ -5,6 +5,7 @@ import { ViewSwitcher, ViewType } from "./ViewSwitcher";
 import { IssuesList } from "./IssuesList";
 import { KanbanBoard } from "./KanbanBoard";
 import { CreateIssueButton } from "./CreateIssueButton";
+import { WorkspaceSelector } from "./WorkspaceSelector";
 import { RoomWithMetadata } from "@/config";
 import { useNavigation } from "./NavigationContext";
 
@@ -103,6 +104,7 @@ export function IssuesView({ initialRooms }: IssuesViewProps) {
               {initialRooms.length} issue{initialRooms.length !== 1 ? 's' : ''}
             </div>
           </div>
+          <WorkspaceSelector />
           <ViewSwitcher currentView={currentView} onViewChange={setCurrentView} />
         </div>
         <CreateIssueButton />

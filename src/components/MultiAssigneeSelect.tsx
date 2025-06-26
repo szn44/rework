@@ -1,8 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { getUsers } from "@/database";
+import { createClient } from "@/utils/supabase/client";
 import { StackedAvatars } from "./StackedAvatars";
+
+interface User {
+  id: string;
+  info: {
+    name: string;
+    avatar: string;
+  };
+}
 
 interface MultiAssigneeSelectProps {
   value: string[];
@@ -11,8 +19,41 @@ interface MultiAssigneeSelectProps {
 
 export function MultiAssigneeSelect({ value, onValueChange }: MultiAssigneeSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const users = getUsers();
+
+  // Load workspace members as potential assignees
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        setLoading(true);
+        
+        const response = await fetch('/api/workspace-users');
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+        
+        const data = await response.json();
+        
+        const usersList = data.users.map((u: any) => ({
+          id: u.id,
+          info: {
+            name: u.name,
+            avatar: u.avatar,
+          },
+        }));
+
+        setUsers(usersList);
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -36,6 +77,15 @@ export function MultiAssigneeSelect({ value, onValueChange }: MultiAssigneeSelec
   const clearAll = () => {
     onValueChange([]);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 px-2 py-1 bg-white border border-neutral-200 rounded-md min-w-[140px]">
+        <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+        <span className="text-sm text-neutral-600">Loading...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="relative" ref={containerRef}>
@@ -85,38 +135,44 @@ export function MultiAssigneeSelect({ value, onValueChange }: MultiAssigneeSelec
           </div>
           
           <div className="py-1">
-            {users.map((user) => {
-              const isSelected = value.includes(user.id);
-              
-              return (
-                <button
-                  key={user.id}
-                  onClick={() => toggleUser(user.id)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-neutral-50 transition-colors"
-                >
-                  <div className="flex items-center gap-2 flex-1">
-                    <img 
-                      src={user.info.avatar} 
-                      alt={user.info.name}
-                      className="w-6 h-6 rounded-full"
-                    />
-                    <span className="text-sm text-neutral-900">{user.info.name}</span>
-                  </div>
-                  
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                    isSelected 
-                      ? 'bg-blue-500 border-blue-500' 
-                      : 'border-neutral-300'
-                  }`}>
-                    {isSelected && (
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+            {users.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-neutral-500">
+                No team members found
+              </div>
+            ) : (
+              users.map((user) => {
+                const isSelected = value.includes(user.id);
+                
+                return (
+                  <button
+                    key={user.id}
+                    onClick={() => toggleUser(user.id)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-neutral-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      <img 
+                        src={user.info.avatar} 
+                        alt={user.info.name}
+                        className="w-6 h-6 rounded-full"
+                      />
+                      <span className="text-sm text-neutral-900">{user.info.name}</span>
+                    </div>
+                    
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                      isSelected 
+                        ? 'bg-blue-500 border-blue-500' 
+                        : 'border-neutral-300'
+                    }`}>
+                      {isSelected && (
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
       )}

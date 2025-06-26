@@ -1,62 +1,129 @@
+import { redirect } from 'next/navigation'
+import { createClient } from '@/utils/supabase/server'
 import { WikiEditor } from "@/components/WikiEditor";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { liveblocks } from "@/liveblocks.server.config";
 import { RoomWithMetadata } from "@/config";
+import { getIssueIdFromIssue } from "@/utils/issueId";
 
 // Cache for 5 seconds to allow faster updates during development
 export const revalidate = 5;
 
 export default async function SpacePage({ params }: { params: { spaceId: string } }) {
-  // Fetch all rooms
-  const allRooms = (await liveblocks.getRooms()).data as RoomWithMetadata[];
-  
-  // Filter to only show issues that belong to this space
-  const spaceIssues = allRooms.filter(room => {
-    // Must start with the issue room prefix
-    if (!room.id.startsWith('liveblocks:examples:nextjs-project-manager-')) {
-      return false;
-    }
-    
-    // Must not be a project room or wiki room
-    if (room.id.startsWith('project-') || room.id.includes('-wiki-')) {
-      return false;
-    }
-    
-    // Must have valid metadata with issueId
-    if (!room.metadata || !room.metadata.issueId) {
-      return false;
-    }
-    
-    // Exclude obviously invalid rooms
-    if (room.metadata.issueId === 'undefined' || !room.metadata.issueId.trim()) {
-      return false;
-    }
-    
-    // Must belong to this space (check both space and project fields for compatibility)
-    return room.metadata.space === params.spaceId || room.metadata.project === params.spaceId;
-  });
+  const supabase = await createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  // Convert to kanban format
-  const kanbanItems = spaceIssues.map(room => ({
-    room,
-    metadata: {
-      issueId: room.metadata.issueId,
-      title: room.metadata.title || "Untitled",
-      priority: room.metadata.priority || "none",
-      progress: room.metadata.progress || "none",
-      assignedTo: Array.isArray(room.metadata.assignedTo) 
-        ? room.metadata.assignedTo 
-        : (room.metadata.assignedTo && room.metadata.assignedTo !== "none" ? [room.metadata.assignedTo] : []),
-      labels: room.metadata.labels || [],
-      project: room.metadata.project,
-      space: room.metadata.space,
-    },
-  }));
+  if (error || !user) {
+    redirect('/login')
+  }
+
+  // Get the space by slug
+  const { data: space } = await supabase
+    .from("spaces")
+    .select(`
+      id,
+      name,
+      slug,
+      description,
+      color,
+      workspace_id,
+      workspaces (
+        name,
+        slug
+      )
+    `)
+    .eq("slug", params.spaceId)
+    .single()
+
+  if (!space) {
+    // Space not found, redirect to main issues page
+    redirect('/')
+  }
+
+  // Check if user is a member of this workspace
+  const { data: membership } = await supabase
+    .from("workspace_members")
+    .select("id")
+    .eq("workspace_id", space.workspace_id)
+    .eq("member_id", user.id)
+    .single()
+
+  if (!membership) {
+    // User is not a member of this workspace
+    redirect('/')
+  }
+
+  // Get issues from this space
+  const { data: issues } = await supabase
+    .from("issues")
+    .select(`
+      id,
+      workspace_slug,
+      issue_number,
+      title,
+      status,
+      priority,
+      assignee_ids,
+      liveblocks_room_id,
+      created_at,
+      updated_at,
+      spaces (
+        slug,
+        name,
+        color
+      )
+    `)
+    .eq("space_id", space.id)
+    .order("updated_at", { ascending: false })
+
+  // Convert to kanban format for WikiEditor
+  const kanbanItems = (issues || []).map(issue => {
+    // Transform data to match getIssueIdFromIssue expectations
+    const transformedIssue = {
+      ...issue,
+      spaces: issue.spaces ? [issue.spaces] : [] // Wrap single space object in array
+    };
+
+    return {
+      room: {
+        type: 'room',
+        id: issue.liveblocks_room_id || `liveblocks:examples:nextjs-project-manager-${issue.workspace_slug}-${issue.issue_number}`,
+        metadata: {
+          issueId: getIssueIdFromIssue(transformedIssue),
+          title: issue.title,
+          progress: issue.status,
+          priority: issue.priority,
+          assignedTo: issue.assignee_ids?.join(',') || 'none',
+          labels: [],
+          space: (issue.spaces as any)?.slug || params.spaceId,
+          project: issue.workspace_slug,
+        },
+        createdAt: issue.created_at,
+        lastConnectionAt: issue.updated_at,
+        usersAccesses: {},
+        groupsAccesses: {},
+        defaultAccesses: ['room:write']
+      } as RoomWithMetadata,
+      metadata: {
+        issueId: getIssueIdFromIssue(transformedIssue),
+        title: issue.title || "Untitled",
+        priority: issue.priority || "none",
+        progress: issue.status || "none",
+        assignedTo: issue.assignee_ids || [],
+        labels: [],
+        project: issue.workspace_slug,
+        space: (issue.spaces as any)?.slug || params.spaceId,
+      },
+    };
+  });
 
   return (
     <ResponsiveLayout>
       <main className="m-2 border flex-grow bg-white rounded">
-        <WikiEditor roomId={params.spaceId} kanbanItems={kanbanItems} />
+        <WikiEditor 
+          roomId={`space-${space.slug}-wiki`} 
+          spaceName={space.name}
+          kanbanItems={kanbanItems}
+        />
       </main>
     </ResponsiveLayout>
   );

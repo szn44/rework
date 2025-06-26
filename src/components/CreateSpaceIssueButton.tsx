@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useNavigation } from "./NavigationContext";
+import { useWorkspace } from "./WorkspaceContext";
+import { useSpace } from "./SpaceContext";
 
 interface CreateSpaceIssueButtonProps {
   spaceId: string;
@@ -11,16 +13,19 @@ interface CreateSpaceIssueButtonProps {
 export function CreateSpaceIssueButton({ spaceId }: CreateSpaceIssueButtonProps) {
   const [isCreating, setIsCreating] = useState(false);
   const { navigateToIssue } = useNavigation();
+  const { currentWorkspace } = useWorkspace();
+  const { currentSpace } = useSpace();
 
   const handleCreateIssue = async () => {
     if (isCreating) return; // Prevent double-clicks
     
+    if (!currentWorkspace) {
+      console.error("No current workspace selected");
+      return;
+    }
+    
     setIsCreating(true);
     try {
-      // Generate issue ID on client side
-      const { nanoid } = await import("nanoid");
-      const issueId = nanoid();
-      
       // Create issue via API with space assignment
       const response = await fetch('/api/create-issue', {
         method: 'POST',
@@ -28,18 +33,22 @@ export function CreateSpaceIssueButton({ spaceId }: CreateSpaceIssueButtonProps)
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          issueId,
-          progress: 'todo', // Default to todo for space issues
-          space: spaceId,
-          project: spaceId, // For backward compatibility
+          workspace_id: currentWorkspace.id,
+          space_id: currentSpace?.id || null,
+          status: 'todo',
+          title: 'Untitled'
         }),
       });
 
       if (response.ok) {
-        // Navigate to the new issue with proper context
-        navigateToIssue(issueId, `space-${spaceId}`);
+        const result = await response.json();
+        if (result.issueId) {
+          // Navigate to the new issue with proper context
+          navigateToIssue(result.issueId, `space-${spaceId}`);
+        }
       } else {
-        console.error('Failed to create issue:', response.statusText);
+        const error = await response.json();
+        console.error('Failed to create issue:', error);
       }
     } catch (error) {
       console.error("Failed to create issue:", error);

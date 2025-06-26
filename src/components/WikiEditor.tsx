@@ -11,6 +11,7 @@ import { CreateSpaceIssueButton } from "./CreateSpaceIssueButton";
 
 interface WikiEditorProps {
   roomId: string;
+  spaceName?: string;
   kanbanItems?: Array<{
     room: any;
     metadata: {
@@ -45,7 +46,7 @@ const blockNoteCustomStyles = `
   }
 `;
 
-export function WikiEditor({ roomId, kanbanItems = [] }: WikiEditorProps) {
+export function WikiEditor({ roomId, spaceName, kanbanItems = [] }: WikiEditorProps) {
   const [activeTab, setActiveTab] = useState("Space");
   const [aiInput, setAiInput] = useState("");
 
@@ -67,7 +68,10 @@ export function WikiEditor({ roomId, kanbanItems = [] }: WikiEditorProps) {
 
   // Get the display title from roomId
   const getDisplayTitle = (roomId: string) => {
-    // Convert roomId to display format (e.g., "all-rework" -> "all-rework")
+    // If spaceName is provided, use it; otherwise convert roomId to display format
+    if (spaceName) {
+      return spaceName;
+    }
     return roomId;
   };
 

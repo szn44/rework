@@ -37,10 +37,25 @@ export function KanbanCard({ room, metadata, type }: KanbanCardProps) {
     transition,
   };
 
-  const date = room.createdAt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  const date = (() => {
+    const createdAt = room.createdAt;
+    if (typeof createdAt === 'string') {
+      return new Date(createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } else if (createdAt instanceof Date) {
+      return createdAt.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } else {
+      return new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    }
+  })();
 
   const priorityState = PRIORITY_STATES.find((p) => p.id === metadata.priority);
 
@@ -101,7 +116,7 @@ export function KanbanCard({ room, metadata, type }: KanbanCardProps) {
               </div>
             )}
             <span className="text-xs font-mono text-gray-500 tracking-wide font-medium">
-              {type === "issue" ? `REW-${metadata.issueId.slice(-4)}` : `PROJ-${metadata.issueId.slice(-4)}`}
+              {metadata.issueId}
             </span>
           </div>
           <span className="text-xs text-gray-400 font-medium">{date}</span>

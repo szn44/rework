@@ -11,6 +11,9 @@ import { StackedAvatars } from "./StackedAvatars";
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import { useNavigation } from "./NavigationContext";
+import { useWorkspace } from "./WorkspaceContext";
+import { useSpace } from "./SpaceContext";
+import { usePathname } from "next/navigation";
 
 export function IssuesList({
   initialRooms,
@@ -124,10 +127,25 @@ export function Row({ room }: { room: RoomWithMetadata }) {
   // Handle both legacy single assignee and new multiple assignee format
   const assigneeIds = Array.isArray(assignedTo) ? assignedTo : (assignedTo && assignedTo !== "none" ? [assignedTo] : []);
 
-  const date = room.createdAt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  const date = (() => {
+    const createdAt = room.createdAt;
+    if (typeof createdAt === 'string') {
+      return new Date(createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } else if (createdAt instanceof Date) {
+      return createdAt.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } else {
+      return new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    }
+  })();
 
   const handleClick = () => {
     navigateToIssue(issueId, 'issues');
@@ -190,9 +208,21 @@ function EmptyStateRow({ progressType }: { progressType: string }) {
 
 function CreateIssueWithProgress({ progressType }: { progressType: string }) {
   const [isCreating, setIsCreating] = useState(false);
+  const pathname = usePathname();
+  const { currentWorkspace } = useWorkspace();
+  const { currentSpace } = useSpace();
 
   const handleCreateIssue = async () => {
     if (isCreating) return; // Prevent multiple clicks
+    
+    if (!currentWorkspace) {
+      console.error("No current workspace selected");
+      return;
+    }
+
+    // Only assign space if we're on a space page (not main issues page)
+    const isOnSpacePage = pathname.startsWith('/spaces/');
+    const spaceIdToAssign = isOnSpacePage ? (currentSpace?.id || null) : null;
     
     setIsCreating(true);
     try {
@@ -201,7 +231,12 @@ function CreateIssueWithProgress({ progressType }: { progressType: string }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ progress: progressType }),
+        body: JSON.stringify({ 
+          workspace_id: currentWorkspace.id,
+          space_id: spaceIdToAssign,
+          status: progressType,
+          title: 'Untitled'
+        }),
       });
       
       if (response.ok) {
@@ -211,7 +246,8 @@ function CreateIssueWithProgress({ progressType }: { progressType: string }) {
           window.location.href = `/issue/${result.issueId}`;
         }
       } else {
-        console.error('Failed to create issue:', response.statusText);
+        const error = await response.json();
+        console.error('Failed to create issue:', error);
       }
     } catch (error) {
       console.error('Error creating issue:', error);
@@ -219,6 +255,14 @@ function CreateIssueWithProgress({ progressType }: { progressType: string }) {
       setIsCreating(false);
     }
   };
+
+  if (!currentWorkspace) {
+    return (
+      <div className="flex h-12 items-center justify-start px-4 text-sm border-b border-neutral-100 bg-white">
+        <span className="text-neutral-400">No workspace selected</span>
+      </div>
+    );
+  }
 
   return (
     <button

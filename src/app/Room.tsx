@@ -3,7 +3,6 @@
 import { RoomProvider } from "@liveblocks/react/suspense";
 import { LiveList, LiveObject } from "@liveblocks/client";
 import { ReactNode, useEffect, useState } from "react";
-import { getRoomId } from "@/config";
 
 export function Room({
   children,
@@ -12,37 +11,52 @@ export function Room({
   children: ReactNode;
   issueId: string;
 }) {
-  const [isReady, setIsReady] = useState(false);
+  const [roomId, setRoomId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const roomId = getRoomId(issueId);
 
   useEffect(() => {
-    // Add a small delay to ensure the room is fully created
-    const timer = setTimeout(() => {
-      setIsReady(true);
-    }, 100);
+    async function fetchRoomId() {
+      try {
+        const response = await fetch(`/api/get-room-id?issueId=${encodeURIComponent(issueId)}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError("Issue not found. This issue may have been deleted or you may not have access to it.");
+          } else {
+            setError("Failed to load issue. Please try again.");
+          }
+          return;
+        }
+        
+        const data = await response.json();
+        setRoomId(data.roomId);
+      } catch (err) {
+        console.error("Error fetching room ID:", err);
+        setError("Failed to load issue. Please check your connection.");
+      }
+    }
 
-    return () => clearTimeout(timer);
+    fetchRoomId();
   }, [issueId]);
 
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <h2 className="text-lg font-semibold text-red-600 mb-2">Error loading room</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h2 className="text-lg font-semibold text-red-600 mb-2">Issue not found</h2>
+          <p className="text-gray-600 mb-4">This issue may have been deleted or is still being created.</p>
           <a 
             href="/" 
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block"
           >
-            Back to Issues
+            ← Back to issue list
           </a>
         </div>
       </div>
     );
   }
 
-  if (!isReady) {
+  if (!roomId) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">

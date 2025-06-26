@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useInbox } from "@/components/InboxContext";
+import { useWorkspace } from "./WorkspaceContext";
+import { useSpace } from "./SpaceContext";
 import classNames from "classnames";
 import { usePathname, useRouter } from "next/navigation";
 import { CreateIcon } from "@/icons/CreateIcon";
@@ -20,33 +22,40 @@ export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const [creating, setCreating] = useState(false);
+  const { currentWorkspace } = useWorkspace();
+  const { currentSpace } = useSpace();
 
   const handleCreateIssue = async () => {
     if (creating) return; // Prevent double-clicks
     
+    if (!currentWorkspace) {
+      console.error("No current workspace selected");
+      return;
+    }
+    
     setCreating(true);
     try {
-      // Generate issue ID on client side
-      const { nanoid } = await import("nanoid");
-      const issueId = nanoid();
-      
-      // Use API route instead of server action
       const response = await fetch('/api/create-issue', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          issueId,
-          progress: 'none' 
+          workspace_id: currentWorkspace.id,
+          space_id: currentSpace?.id || null,
+          status: 'todo',
+          title: 'Untitled'
         }),
       });
 
       if (response.ok) {
-        // Navigate on client side
-        router.push(`/issue/${issueId}`);
+        const result = await response.json();
+        if (result.issueId) {
+          router.push(`/issue/${result.issueId}`);
+        }
       } else {
-        console.error('Failed to create issue:', response.statusText);
+        const error = await response.json();
+        console.error('Failed to create issue:', error);
       }
     } catch (error) {
       console.error("Failed to create issue:", error);

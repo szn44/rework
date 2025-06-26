@@ -11,7 +11,8 @@ import { Select } from "@/components/Select";
 import { MultiAssigneeSelect } from "@/components/MultiAssigneeSelect";
 import { StackedAvatars } from "@/components/StackedAvatars";
 import { ImmutableStorage } from "@/liveblocks.config";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 export function IssueProperties({
   storageFallback,
@@ -64,14 +65,51 @@ const USERS = [
     id: "none",
     jsx: <div className="text-neutral-600">Not assigned</div>,
   },
-  ...getUsers().map((user) => ({
-    id: user.id,
-    jsx: <AvatarAndName user={user} />,
-  })),
 ];
 
 function Properties({ roomMetadata }: { roomMetadata?: any }) {
   const properties = useStorage((root) => root.properties);
+  const [users, setUsers] = useState(USERS);
+
+  // Load workspace members as potential assignees
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const response = await fetch('/api/workspace-users');
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+        
+        const data = await response.json();
+        
+        const userOptions = data.users.map((u: any) => ({
+          id: u.id,
+          jsx: (
+            <div className="flex items-center gap-2">
+              <img
+                src={u.avatar}
+                alt={u.name}
+                className="w-6 h-6 rounded-full"
+              />
+              <span>{u.name}</span>
+            </div>
+          ),
+        }));
+
+        setUsers([
+          {
+            id: "none",
+            jsx: <div className="text-neutral-600">Not assigned</div>,
+          },
+          ...userOptions
+        ]);
+      } catch (error) {
+        console.error("Error loading users:", error);
+      }
+    }
+
+    loadUsers();
+  }, []);
 
   const editProperty = useMutation(({ storage }, prop, value) => {
     storage.get("properties").set(prop, value);
@@ -134,16 +172,9 @@ function Properties({ roomMetadata }: { roomMetadata?: any }) {
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Failed to update issue metadata:', response.status, errorText);
-          // Force reload even on error to check current state
-          setTimeout(() => {
-            window.location.reload();
-          }, 100);
         } else {
           const responseData = await response.json();
           console.log(`Successfully synced ${prop} to metadata:`, responseData);
-          
-          // Force immediate page refresh to show updated status
-          window.location.reload();
         }
       }
     } catch (error) {
@@ -167,13 +198,15 @@ function Properties({ roomMetadata }: { roomMetadata?: any }) {
           body: JSON.stringify({
             roomId: `liveblocks:examples:nextjs-project-manager-${roomId}`,
             metadata: {
-              assignedTo: assignees.length > 0 ? assignees[0] : "none", // Legacy format for metadata
+              assignedTo: assignees.join(',')
             },
           }),
         });
         
         if (!response.ok) {
-          console.error('Failed to update assignee metadata');
+          console.error('Failed to update assignees');
+        } else {
+          console.log('Successfully updated assignees');
         }
       }
     } catch (error) {

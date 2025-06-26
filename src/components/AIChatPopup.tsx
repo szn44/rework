@@ -17,7 +17,7 @@ export function AIChatPopup() {
     {
       id: "welcome",
       role: "assistant",
-      content: "👋 Hi! I'm your AI assistant. I can help you with code reviews, suggestions, and general questions about your project. How can I help you today?",
+      content: "👋 Hi! I'm your AI assistant. How can I help you today?",
       timestamp: Date.now()
     }
   ]);

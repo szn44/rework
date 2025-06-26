@@ -5,27 +5,58 @@ import {
   useMutation,
   useStorage,
 } from "@liveblocks/react/suspense";
-import { SPACES } from "@/config";
 import { Select } from "@/components/Select";
 import { PlusIcon } from "@/icons/PlusIcon";
 import { ImmutableStorage } from "@/liveblocks.config";
+import { useEffect, useState } from "react";
+
+interface Space {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+}
 
 export function IssueProject({
   storageFallback,
 }: {
   storageFallback: ImmutableStorage;
 }) {
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/spaces')
+      .then(res => res.json())
+      .then(data => {
+        setSpaces(data.spaces || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch spaces:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap min-h-[26px] pointer-events-none">
+        <div className="text-neutral-400">Loading spaces...</div>
+      </div>
+    );
+  }
+
   return (
     <ClientSideSuspense
       fallback={
         <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap min-h-[26px] pointer-events-none">
-          {(storageFallback.space || storageFallback.project) && SPACES.find(s => s.id === (storageFallback.space || storageFallback.project)) && (
+          {(storageFallback.space || storageFallback.project) && spaces.find(s => s.slug === (storageFallback.space || storageFallback.project)) && (
             <div className="text-sm font-medium rounded-full px-2 py-0.5 border shadow-xs flex items-center gap-1.5 select-none text-neutral-700">
               <div 
                 className="rounded-full w-2 h-2" 
-                style={{ backgroundColor: SPACES.find(s => s.id === (storageFallback.space || storageFallback.project))?.color || "#6B7280" }}
+                style={{ backgroundColor: spaces.find(s => s.slug === (storageFallback.space || storageFallback.project))?.color || "#6B7280" }}
               />
-              {SPACES.find(s => s.id === (storageFallback.space || storageFallback.project))?.name}
+              {spaces.find(s => s.slug === (storageFallback.space || storageFallback.project))?.name}
               <div className="text-base leading-none pb-0.5 text-neutral-400">
                 ×
               </div>
@@ -34,19 +65,19 @@ export function IssueProject({
         </div>
       }
     >
-      <Space />
+      <Space spaces={spaces} />
     </ClientSideSuspense>
   );
 }
 
-function Space() {
+function Space({ spaces }: { spaces: Space[] }) {
   const space = useStorage((root) => root.space);
   const project = useStorage((root) => root.project); // For backward compatibility
 
-  const setSpace = useMutation(({ storage }, spaceId) => {
-    storage.set("space", spaceId);
+  const setSpace = useMutation(({ storage }, spaceSlug) => {
+    storage.set("space", spaceSlug);
     // Also update project for backward compatibility
-    storage.set("project", spaceId);
+    storage.set("project", spaceSlug);
   }, []);
 
   const removeSpace = useMutation(({ storage }) => {
@@ -55,7 +86,7 @@ function Space() {
   }, []);
 
   // Handle API call separately from mutation
-  const updateSpaceMetadata = async (spaceId: string) => {
+  const updateSpaceMetadata = async (spaceSlug: string) => {
     try {
       const response = await fetch('/api/update-issue', {
         method: 'POST',
@@ -67,8 +98,8 @@ function Space() {
             `liveblocks:examples:nextjs-project-manager-${window.location.pathname.split('/issue/')[1]}` :
             undefined,
           metadata: {
-            space: spaceId,
-            project: spaceId, // For backward compatibility
+            space: spaceSlug,
+            project: spaceSlug, // For backward compatibility
           },
         }),
       });
@@ -81,9 +112,9 @@ function Space() {
     }
   };
 
-  const handleSetSpace = (spaceId: string) => {
-    setSpace(spaceId);
-    updateSpaceMetadata(spaceId);
+  const handleSetSpace = (spaceSlug: string) => {
+    setSpace(spaceSlug);
+    updateSpaceMetadata(spaceSlug);
   };
 
   const handleRemoveSpace = () => {
@@ -92,8 +123,8 @@ function Space() {
     updateSpaceMetadata("");
   };
 
-  const SPACE_LIST = SPACES.map((sp) => ({
-    id: sp.id,
+  const SPACE_LIST = spaces.map((sp) => ({
+    id: sp.slug,
     jsx: (
       <div className="flex items-center gap-2">
         <div 
@@ -103,10 +134,10 @@ function Space() {
         <span>{sp.name}</span>
       </div>
     ),
-    disabled: (space || project) === sp.id,
+    disabled: (space || project) === sp.slug,
   }));
 
-  const selectedSpace = SPACES.find(s => s.id === (space || project));
+  const selectedSpace = spaces.find(s => s.slug === (space || project));
 
   return (
     <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap">

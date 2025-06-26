@@ -1,38 +1,67 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useWorkspace } from "./WorkspaceContext";
+import { useSpace } from "./SpaceContext";
 
 export function CreateIssueButton() {
   const [isCreating, setIsCreating] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  const { currentWorkspace } = useWorkspace();
+  const { currentSpace } = useSpace();
 
   const handleCreateIssue = async () => {
+    console.log("CreateIssueButton clicked");
+    console.log("Current workspace:", currentWorkspace);
+    console.log("Current space:", currentSpace);
+    console.log("Current pathname:", pathname);
+    
     if (isCreating) return; // Prevent double-clicks
+    
+    if (!currentWorkspace) {
+      console.error("No current workspace selected");
+      return;
+    }
+
+    // Only assign space if we're on a space page (not main issues page)
+    const isOnSpacePage = pathname.startsWith('/spaces/');
+    const spaceIdToAssign = isOnSpacePage ? (currentSpace?.id || null) : null;
+    
+    console.log("Is on space page:", isOnSpacePage);
+    console.log("Space ID to assign:", spaceIdToAssign);
     
     setIsCreating(true);
     try {
-      // Generate issue ID on client side
-      const { nanoid } = await import("nanoid");
-      const issueId = nanoid();
-      
-      // Use API route instead of server action to avoid redirect issues
+      console.log("Making API request to create issue...");
+      // Use API route with proper workspace_id and space_id
       const response = await fetch('/api/create-issue', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          issueId,
-          progress: 'none' 
+          workspace_id: currentWorkspace.id,
+          space_id: spaceIdToAssign,
+          status: 'todo',
+          title: 'Untitled'
         }),
       });
 
+      console.log("API response status:", response.status);
+      
       if (response.ok) {
-        // Navigate on client side instead of server redirect
-        router.push(`/issue/${issueId}`);
+        const result = await response.json();
+        console.log("API response result:", result);
+        if (result.issueId) {
+          // Navigate to the new issue
+          console.log("Navigating to issue:", result.issueId);
+          router.push(`/issue/${result.issueId}`);
+        }
       } else {
-        console.error('Failed to create issue:', response.statusText);
+        const error = await response.json();
+        console.error('Failed to create issue:', error);
       }
     } catch (error) {
       console.error("Failed to create issue:", error);
@@ -40,6 +69,14 @@ export function CreateIssueButton() {
       setIsCreating(false);
     }
   };
+
+  if (!currentWorkspace) {
+    return (
+      <div className="bg-gray-300 text-gray-500 rounded-lg px-3 py-2 text-sm font-medium cursor-not-allowed">
+        No Workspace
+      </div>
+    );
+  }
 
   return (
     <button

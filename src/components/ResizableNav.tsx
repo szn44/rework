@@ -19,14 +19,27 @@ import {
   ChevronRightIcon as ChevronRightSmall,
   PlusIcon
 } from "@heroicons/react/24/outline";
+import { useWorkspace } from "./WorkspaceContext";
+import { useSpace } from "./SpaceContext";
 
 export function ResizableNav() {
-  const { width, isResizing, setIsResizing, setWidth } = useNavigation();
   const { isOpen, toggleInbox } = useInbox();
   const pathname = usePathname();
   const [creating, setCreating] = useState(false);
+  const [showCreateSpace, setShowCreateSpace] = useState(false);
+  const [createSpaceForm, setCreateSpaceForm] = useState({
+    name: '',
+    slug: '',
+    description: '',
+    color: '#3b82f6'
+  });
+  const [width, setWidth] = useState(240);
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
+  
+  const { workspaces, currentWorkspace } = useWorkspace();
+  const { spaces, currentSpace, setCurrentSpace } = useSpace();
 
   // Reset creating state on pathname change (in case it gets stuck)
   useEffect(() => {
@@ -85,23 +98,12 @@ export function ResizableNav() {
     },
   ];
 
-  const spacesItems = [
-    {
-      href: "/spaces/all-rework",
-      label: "all-rework",
-      isActive: pathname.startsWith("/spaces/all-rework") || pathname === "/wiki",
-    },
-    {
-      href: "/spaces/new-channel",
-      label: "new-channel",
-      isActive: pathname === "/spaces/new-channel",
-    },
-    {
-      href: "/spaces/social",
-      label: "social", 
-      isActive: pathname === "/spaces/social",
-    },
-  ];
+  const spacesItems = spaces.map(space => ({
+    href: `/spaces/${space.slug}`,
+    label: space.name,
+    color: space.color,
+    isActive: pathname.startsWith(`/spaces/${space.slug}`),
+  }));
 
   const integrationItems = [
     {
@@ -112,11 +114,153 @@ export function ResizableNav() {
     },
   ];
 
-  // Mock user data - replace with actual user context/auth
+  // Remove mock user data and get from auth context instead
   const user = {
-    name: "John Dominos",
-    email: "johndoe@gmail.com",
-    avatar: "/api/placeholder/32/32", // Replace with actual avatar URL
+    name: "User", // This should come from auth context
+    email: "user@example.com", // This should come from auth context  
+    avatar: "/api/placeholder/32/32", // This should come from auth context
+  };
+
+  // Update create issue handler to use workspace context
+  const handleCreateIssue = async () => {
+    console.log("ResizableNav CreateIssue clicked");
+    console.log("Current workspace:", currentWorkspace);
+    console.log("Current space:", currentSpace);
+    console.log("Current pathname:", pathname);
+    
+    if (creating) return; // Prevent double-clicks
+    
+    if (!currentWorkspace) {
+      console.error("No current workspace selected - using hardcoded fallback");
+      // Use hardcoded workspace ID as fallback
+      const fallbackWorkspaceId = 'f1725467-7a48-4a9d-91c3-c85b6d0b1db8';
+      
+      setCreating(true);
+      try {
+        const response = await fetch('/api/create-issue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            workspace_id: fallbackWorkspaceId,
+            space_id: null,
+            status: 'todo',
+            title: 'Untitled'
+          }),
+        });
+
+        console.log("API response status:", response.status);
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("API response result:", result);
+          if (result.issueId) {
+            console.log("Navigating to issue:", result.issueId);
+            window.location.href = `/issue/${result.issueId}`;
+          }
+        } else {
+          const error = await response.json();
+          console.error('Failed to create issue:', error);
+        }
+      } catch (error) {
+        console.error("Failed to create issue:", error);
+      } finally {
+        setCreating(false);
+      }
+      return;
+    }
+
+    // Only assign space if we're on a space page (not main issues page)
+    const isOnSpacePage = pathname.startsWith('/spaces/');
+    const spaceIdToAssign = isOnSpacePage ? (currentSpace?.id || null) : null;
+    
+    console.log("Is on space page:", isOnSpacePage);
+    console.log("Space ID to assign:", spaceIdToAssign);
+    
+    setCreating(true);
+    try {
+      console.log("Making API request to create issue...");
+      const response = await fetch('/api/create-issue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          workspace_id: currentWorkspace.id,
+          space_id: spaceIdToAssign,
+          status: 'todo',
+          title: 'Untitled'
+        }),
+      });
+
+      console.log("API response status:", response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("API response result:", result);
+        if (result.issueId) {
+          console.log("Navigating to issue:", result.issueId);
+          window.location.href = `/issue/${result.issueId}`;
+        }
+      } else {
+        const error = await response.json();
+        console.error('Failed to create issue:', error);
+      }
+    } catch (error) {
+      console.error("Failed to create issue:", error);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  // Handle create space
+  const handleCreateSpace = async () => {
+    if (!currentWorkspace) {
+      console.error("No current workspace selected");
+      return;
+    }
+
+    if (!createSpaceForm.name.trim()) {
+      console.error("Space name is required");
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/spaces', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: createSpaceForm.name.trim(),
+          slug: createSpaceForm.slug || createSpaceForm.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+          description: createSpaceForm.description.trim(),
+          color: createSpaceForm.color,
+          workspace_id: currentWorkspace.id,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Space created:', result);
+        // Reset form
+        setCreateSpaceForm({
+          name: '',
+          slug: '',
+          description: '',
+          color: '#3b82f6'
+        });
+        setShowCreateSpace(false);
+        // Refresh the page to show new space
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        console.error('Failed to create space:', error);
+      }
+    } catch (error) {
+      console.error('Error creating space:', error);
+    }
   };
 
   return (
@@ -126,6 +270,56 @@ export function ResizableNav() {
           <div className="bg-white rounded-xl p-6 shadow-2xl border border-gray-200">
             <Loading />
             <p className="mt-4 text-sm text-gray-600 font-medium">Creating issue...</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Create Space Modal */}
+      {showCreateSpace && (
+        <div className="inset-0 bg-black/50 backdrop-blur-sm fixed z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-6 shadow-2xl border border-gray-200 w-96">
+            <h2 className="text-lg font-semibold mb-4">Create New Space</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={createSpaceForm.name}
+                  onChange={(e) => setCreateSpaceForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Space name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description (optional)
+                </label>
+                <input
+                  type="text"
+                  value={createSpaceForm.description}
+                  onChange={(e) => setCreateSpaceForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Space description"
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowCreateSpace(false)}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateSpace}
+                  disabled={!createSpaceForm.name.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Create
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -159,39 +353,7 @@ export function ResizableNav() {
             
             <div className="flex items-center gap-1.5">
               <button
-                onClick={async () => {
-                  if (creating) return; // Prevent double-clicks
-                  
-                  setCreating(true);
-                  try {
-                    // Generate issue ID on client side
-                    const { nanoid } = await import("nanoid");
-                    const issueId = nanoid();
-                    
-                    // Use API route instead of server action
-                    const response = await fetch('/api/create-issue', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({ 
-                        issueId,
-                        progress: 'none' 
-                      }),
-                    });
-
-                    if (response.ok) {
-                      // Navigate on client side
-                      window.location.href = `/issue/${issueId}`;
-                    } else {
-                      console.error('Failed to create issue:', response.statusText);
-                    }
-                  } catch (error) {
-                    console.error("Failed to create issue:", error);
-                  } finally {
-                    setCreating(false);
-                  }
-                }}
+                onClick={handleCreateIssue}
                 disabled={creating}
                 className="bg-gray-800 hover:bg-gray-900 text-white rounded-lg p-1.5 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Create Issue"
@@ -283,7 +445,10 @@ export function ResizableNav() {
           <div className="mt-6 mb-2">
             <div className="text-sm font-medium text-gray-500 tracking-wide px-3 mb-3 mt-3 flex items-center justify-between">
               <span>Spaces</span>
-              <button className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 w-6 h-6 flex items-center justify-center rounded transition-colors duration-200">
+              <button 
+                onClick={() => setShowCreateSpace(true)}
+                className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 w-6 h-6 flex items-center justify-center rounded transition-colors duration-200"
+              >
                 <PlusIcon className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -312,7 +477,10 @@ export function ResizableNav() {
           <div className="mt-6 mb-2">
             <div className="text-sm font-medium text-gray-500 tracking-wide px-3 mb-3 mt-3 flex items-center justify-between">
               <span>Integrations</span>
-              <button className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 w-6 h-6 flex items-center justify-center rounded transition-colors duration-200">
+              <button 
+                onClick={() => setShowCreateSpace(true)}
+                className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 w-6 h-6 flex items-center justify-center rounded transition-colors duration-200"
+              >
                 <PlusIcon className="w-3.5 h-3.5" />
               </button>
             </div>
