@@ -153,14 +153,6 @@ export function ResizableNav() {
     isActive: pathname.startsWith(`/spaces/${space.slug}`),
   }));
 
-  const integrationItems = [
-    {
-      label: "Zero",
-      icon: "Z",
-      badge: "1",
-      disabled: true,
-    },
-  ];
 
   // User data is now loaded from userProfile state
 
@@ -572,33 +564,6 @@ export function ResizableNav() {
             ))}
           </div>
 
-          {/* Integrations Section */}
-          <div className="mt-6 mb-2">
-            <div className="text-sm font-medium text-gray-500 tracking-wide px-3 mb-3 mt-3 flex items-center justify-between">
-              <span>Integrations</span>
-              <button 
-                onClick={() => setShowCreateSpace(true)}
-                className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 w-6 h-6 flex items-center justify-center rounded transition-colors duration-200"
-              >
-                <PlusIcon className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            
-            {integrationItems.map((integration, index) => (
-              <div
-                key={index}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium opacity-75 cursor-not-allowed text-gray-700"
-              >
-                <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">{integration.icon}</span>
-                </div>
-                <span className="truncate flex-1">{integration.label}</span>
-                <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium">
-                  {integration.badge}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Bottom Section - Settings */}

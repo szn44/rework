@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useWorkspace } from "@/components/WorkspaceContext";
-import { IssueWithRelations } from "@/config";
+import { IssueWithRelations, PRIORITY_STATES, PROJECTS } from "@/config";
 import classNames from "classnames";
 import { CheckCheckIcon } from "@/icons/CheckCheckIcon";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { StackedAvatars } from "./StackedAvatars";
 
 interface InboxProps {
   onIssueSelect?: (issueId: string) => void;
@@ -137,74 +138,122 @@ interface IssueCardProps {
 }
 
 function IssueCard({ issue, onClick }: IssueCardProps) {
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'todo':
-        return 'bg-gray-100 text-gray-700';
-      case 'in_progress':
-      case 'in progress':
-        return 'bg-blue-100 text-blue-700';
-      case 'done':
-        return 'bg-green-100 text-green-700';
-      case 'backlog':
-        return 'bg-gray-100 text-gray-600';
-      default:
-        return 'bg-gray-100 text-gray-700';
+  const date = (() => {
+    const updatedAt = issue.updated_at;
+    if (typeof updatedAt === 'string') {
+      return new Date(updatedAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } else if (updatedAt instanceof Date) {
+      return updatedAt.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } else {
+      return new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
     }
+  })();
+
+  const priorityState = PRIORITY_STATES.find((p) => p.id === issue.priority);
+  const project = PROJECTS.find(p => p.id === issue.workspace_slug);
+
+  const cardStyle = {
+    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.06)',
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority?.toLowerCase()) {
-      case 'high':
-        return 'bg-red-100 text-red-700';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'low':
-        return 'bg-green-100 text-green-700';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClick();
   };
 
   return (
     <div
-      onClick={onClick}
-      className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer"
+      style={cardStyle}
+      className="group relative bg-white rounded-xl border-0 transition-all duration-200 cursor-pointer hover:shadow-lg hover:-translate-y-1"
     >
-      <div className="flex items-start justify-between mb-2">
-        <h3 className="font-medium text-gray-900 text-sm line-clamp-2 flex-1">
+      <button
+        onClick={handleCardClick}
+        className="block p-3.5 space-y-3 w-full text-left"
+      >
+        {/* Header with Priority and ID */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            {priorityState && (
+              <div className="flex-shrink-0 w-3.5 h-3.5 opacity-70">
+                {priorityState.icon}
+              </div>
+            )}
+            <span className="text-xs font-mono text-gray-500 tracking-wide font-medium">
+              {issue.workspace_slug}-{issue.issue_number}
+            </span>
+          </div>
+          <span className="text-xs text-gray-400 font-medium">{date}</span>
+        </div>
+
+        {/* Title */}
+        <h3 className="font-semibold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
           {issue.title || 'Untitled'}
         </h3>
-      </div>
-      
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs text-gray-500">
-          {issue.workspace_slug}-{issue.issue_number}
-        </span>
-        {issue.spaces && (
-          <span 
-            className="text-xs px-2 py-1 rounded-full"
-            style={{ backgroundColor: `${issue.spaces.color}20`, color: issue.spaces.color }}
-          >
-            {issue.spaces.name}
-          </span>
-        )}
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(issue.status)}`}>
-          {issue.status?.replace('_', ' ') || 'No Status'}
-        </span>
-        {issue.priority && (
-          <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(issue.priority)}`}>
-            {issue.priority}
-          </span>
-        )}
-      </div>
-      
-      <div className="text-xs text-gray-500 mt-2">
-        Updated {new Date(issue.updated_at).toLocaleDateString()}
-      </div>
+
+        {/* Labels and Project */}
+        <div className="flex flex-wrap gap-1.5">
+          {project && (
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50/80 border border-blue-100 rounded-md text-xs font-medium text-blue-700">
+              <div 
+                className="w-1.5 h-1.5 rounded-full" 
+                style={{ backgroundColor: project.color }}
+              />
+              {project.name}
+            </div>
+          )}
+          {issue.spaces && (
+            <div 
+              className="inline-flex items-center gap-1 px-2 py-0.5 border rounded-md text-xs font-medium"
+              style={{ 
+                backgroundColor: `${issue.spaces.color}20`, 
+                borderColor: `${issue.spaces.color}40`,
+                color: issue.spaces.color 
+              }}
+            >
+              <div 
+                className="w-1.5 h-1.5 rounded-full" 
+                style={{ backgroundColor: issue.spaces.color }}
+              />
+              {issue.spaces.name}
+            </div>
+          )}
+          {issue.status && (
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50/80 border border-gray-100 rounded-md text-xs font-medium text-gray-600">
+              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+              {issue.status.replace('_', ' ')}
+            </div>
+          )}
+        </div>
+
+        {/* Footer with Assignees */}
+        <div className="flex items-center justify-between pt-0.5">
+          <div className="flex-shrink-0">
+            <StackedAvatars 
+              assigneeIds={issue.assignee_ids || []} 
+              maxVisible={3} 
+              size="sm"
+            />
+          </div>
+          
+          {/* Hover Effect Indicator */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="w-5 h-5 rounded-md bg-blue-50 flex items-center justify-center">
+              <svg className="w-2.5 h-2.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </button>
     </div>
   );
 }

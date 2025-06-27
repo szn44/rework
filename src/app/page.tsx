@@ -87,10 +87,7 @@ export default async function PageIssue() {
   return (
     <ResponsiveLayout>
       <main className="m-2 border flex-grow bg-white rounded overflow-hidden">
-       
-        
-        {/* Content */}
-        <div>
+        <div className="h-full">
           <IssuesView initialIssues={issueItems} />
         </div>
       </main>

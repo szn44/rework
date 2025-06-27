@@ -252,40 +252,6 @@ export function Nav() {
         )}
       </div>
 
-      {/* Integrations Section */}
-      <div className="mt-6 mb-2">
-        <div className="text-xs font-medium text-neutral-500 uppercase tracking-wide px-2 mb-3 flex items-center justify-between">
-          <span>Integrations</span>
-          <button className="text-neutral-400 hover:text-neutral-600 w-4 h-4 flex items-center justify-center text-base">
-            +
-          </button>
-        </div>
-        
-        <div
-          className={classNames(
-            "flex items-center justify-between gap-2 w-full text-sm font-medium p-2 rounded-lg text-left transition-colors opacity-75 cursor-not-allowed"
-          )}
-        >
-          <span className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
-              <span className="text-white text-xs font-bold">Z</span>
-            </div>
-            Zero
-            <span className="ml-auto bg-neutral-200 text-neutral-600 text-xs px-2 py-0.5 rounded-full font-medium">1</span>
-          </span>
-        </div>
-        
-        <div
-          className={classNames(
-            "flex items-center justify-between gap-2 w-full text-sm font-medium p-2 rounded-lg text-left transition-colors opacity-75 cursor-not-allowed text-neutral-600"
-          )}
-        >
-          <span className="flex items-center gap-2">
-            <span className="text-neutral-400 text-base">+</span>
-            Add integrations
-          </span>
-        </div>
-      </div>
 
       {/* Username component at bottom */}
       <div className="absolute bottom-4 left-2 right-2">
