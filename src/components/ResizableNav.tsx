@@ -265,7 +265,7 @@ export function ResizableNav() {
 
     if (!currentWorkspace) {
       console.error("No current workspace selected");
-      alert("No current workspace selected");
+      alert("No current workspace selected. Please ensure you're logged in and part of a workspace.");
       return;
     }
 
@@ -277,6 +277,12 @@ export function ResizableNav() {
 
     try {
       const slug = createSpaceForm.slug || createSpaceForm.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
+      // Validate slug format
+      if (!/^[a-z0-9-]{2,30}$/.test(slug)) {
+        alert("Space name must be 2-30 characters and contain only lowercase letters, numbers, and hyphens");
+        return;
+      }
       
       console.log('Making API request with:', {
         name: createSpaceForm.name.trim(),
@@ -301,9 +307,13 @@ export function ResizableNav() {
       });
 
       console.log('API response status:', response.status);
+      
+      // Get response text first to debug
+      const responseText = await response.text();
+      console.log('Raw API response:', responseText);
 
       if (response.ok) {
-        const result = await response.json();
+        const result = JSON.parse(responseText);
         console.log('Space created successfully:', result);
         
         // Reset form
@@ -318,9 +328,15 @@ export function ResizableNav() {
         // Refresh the page to show new space
         window.location.reload();
       } else {
-        const error = await response.json();
-        console.error('API error response:', error);
-        alert(`Failed to create space: ${error.error || 'Unknown error'}`);
+        let errorMessage = 'Unknown error';
+        try {
+          const error = JSON.parse(responseText);
+          errorMessage = error.error || error.message || 'Unknown error';
+        } catch (e) {
+          errorMessage = responseText || 'Unknown error';
+        }
+        console.error('API error response:', errorMessage);
+        alert(`Failed to create space: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Network error creating space:', error);
