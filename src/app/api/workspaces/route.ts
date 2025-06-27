@@ -115,6 +115,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: memberError.message }, { status: 500 })
     }
 
+    // Create default "General" space for the new workspace
+    const { error: spaceError } = await supabase
+      .from("spaces")
+      .insert({
+        name: 'General',
+        slug: 'general',
+        description: 'Default space for general tasks and discussions',
+        color: '#6b7280',
+        team_id: workspace.id,
+        created_by: user.id,
+      })
+
+    if (spaceError) {
+      console.error("Failed to create default General space:", spaceError)
+      // Don't fail the workspace creation, just log the error
+    }
+
     return NextResponse.json({ data: workspace }, { status: 201 })
   } catch (error) {
     console.error('Error creating workspace:', error)

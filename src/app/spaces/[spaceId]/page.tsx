@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
-import { WikiEditor } from "@/components/WikiEditor";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { RoomWithMetadata } from "@/config";
+import { IssuesView } from "@/components/IssuesView";
+import { IssueItem, IssueWithRelations } from "@/config";
 import { getIssueIdFromIssue } from "@/utils/issueId";
 
 // Cache for 5 seconds to allow faster updates during development
@@ -16,8 +16,8 @@ export default async function SpacePage({ params }: { params: { spaceId: string 
     redirect('/login')
   }
 
-  // Get the space by slug
-  const { data: space } = await supabase
+  // Get the space by slug (using team_id instead of workspace_id)
+  const { data: space, error: spaceError } = await supabase
     .from("spaces")
     .select(`
       id,
@@ -25,26 +25,34 @@ export default async function SpacePage({ params }: { params: { spaceId: string 
       slug,
       description,
       color,
-      workspace_id,
-      workspaces (
-        name,
-        slug
-      )
+      team_id
     `)
     .eq("slug", params.spaceId)
     .single()
 
+  console.log('Space lookup for slug:', params.spaceId)
+  console.log('Space result:', space)
+  console.log('Space error:', spaceError)
+
   if (!space) {
+    console.log('Space not found, redirecting to /')
     // Space not found, redirect to main issues page
     redirect('/')
   }
+
+  // Get workspace info separately since foreign key might not exist
+  const { data: workspace } = await supabase
+    .from("workspaces")
+    .select("name, slug")
+    .eq("id", space.team_id)
+    .single()
 
   // Check if user is a member of this workspace
   const { data: membership } = await supabase
     .from("workspace_members")
     .select("id")
-    .eq("workspace_id", space.workspace_id)
-    .eq("member_id", user.id)
+    .eq("workspace_id", space.team_id)
+    .eq("user_id", user.id)
     .single()
 
   if (!membership) {
@@ -53,7 +61,7 @@ export default async function SpacePage({ params }: { params: { spaceId: string 
   }
 
   // Get issues from this space
-  const { data: issues } = await supabase
+  const { data: rawIssues } = await supabase
     .from("issues")
     .select(`
       id,
@@ -63,67 +71,64 @@ export default async function SpacePage({ params }: { params: { spaceId: string 
       status,
       priority,
       assignee_ids,
-      liveblocks_room_id,
       created_at,
       updated_at,
-      spaces (
-        slug,
-        name,
-        color
-      )
+      workspace_id,
+      space_id,
+      description,
+      content,
+      content_text,
+      created_by
     `)
     .eq("space_id", space.id)
     .order("updated_at", { ascending: false })
 
-  // Convert to kanban format for WikiEditor
-  const kanbanItems = (issues || []).map(issue => {
-    // Transform data to match getIssueIdFromIssue expectations
-    const transformedIssue = {
+  // Transform raw issues into IssueItem format
+  const issues: IssueItem[] = (rawIssues || []).map(issue => {
+    const issueWithRelations: IssueWithRelations = {
       ...issue,
-      spaces: issue.spaces ? [issue.spaces] : [] // Wrap single space object in array
+      workspaces: workspace,
+      spaces: space
     };
 
     return {
-      room: {
-        type: 'room',
-        id: issue.liveblocks_room_id || `liveblocks:examples:nextjs-project-manager-${issue.workspace_slug}-${issue.issue_number}`,
-        metadata: {
-          issueId: getIssueIdFromIssue(transformedIssue),
-          title: issue.title,
-          progress: issue.status,
-          priority: issue.priority,
-          assignedTo: issue.assignee_ids?.join(',') || 'none',
-          labels: [],
-          space: (issue.spaces as any)?.slug || params.spaceId,
-          project: issue.workspace_slug,
-        },
-        createdAt: issue.created_at,
-        lastConnectionAt: issue.updated_at,
-        usersAccesses: {},
-        groupsAccesses: {},
-        defaultAccesses: ['room:write']
-      } as RoomWithMetadata,
+      issue: issueWithRelations,
       metadata: {
-        issueId: getIssueIdFromIssue(transformedIssue),
+        issueId: getIssueIdFromIssue(issueWithRelations),
         title: issue.title || "Untitled",
-        priority: issue.priority || "none",
-        progress: issue.status || "none",
+        progress: (issue.status as any) || "todo",
+        priority: (issue.priority as any) || "none",
         assignedTo: issue.assignee_ids || [],
         labels: [],
-        project: issue.workspace_slug,
-        space: (issue.spaces as any)?.slug || params.spaceId,
-      },
+        project: workspace?.slug || "",
+        space: space.slug
+      }
     };
   });
 
   return (
     <ResponsiveLayout>
-      <main className="m-2 border flex-grow bg-white rounded">
-        <WikiEditor 
-          roomId={`space-${space.slug}-wiki`} 
-          spaceName={space.name}
-          kanbanItems={kanbanItems}
-        />
+      <main className="flex-1 bg-white">
+        <div className="border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div 
+              className="w-4 h-4 rounded-sm" 
+              style={{ backgroundColor: space.color }}
+            />
+            <h1 className="text-2xl font-bold text-gray-900">
+              {space.name}
+            </h1>
+            {space.description && (
+              <span className="text-gray-500">• {space.description}</span>
+            )}
+          </div>
+        </div>
+        
+        <div className="p-6">
+          <IssuesView 
+            initialIssues={issues}
+          />
+        </div>
       </main>
     </ResponsiveLayout>
   );

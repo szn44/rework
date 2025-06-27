@@ -284,7 +284,7 @@ export function SettingsLayout() {
       </div>
 
       {/* Profile Section */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div className="bg-white max-w-[600px] border border-gray-200 rounded-xl p-6 shadow-sm">
         <h3 className="text-base font-semibold text-gray-900 mb-4">Profile Information</h3>
         {profile.loading ? (
           <div className="flex items-center justify-center py-12">
@@ -377,7 +377,7 @@ export function SettingsLayout() {
 
 
       {/* Password Section */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div className="bg-white max-w-[600px] border border-gray-200 rounded-xl p-6 shadow-sm">
         <h3 className="text-base font-semibold text-gray-900 mb-4">Change Password</h3>
         <div className="space-y-4 max-w-md">
           <div>

@@ -276,11 +276,29 @@ export function ResizableNav() {
     }
 
     try {
-      const slug = createSpaceForm.slug || createSpaceForm.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      // Generate slug: lowercase, replace spaces with hyphens, remove invalid chars
+      let slug = createSpaceForm.slug || createSpaceForm.name.toLowerCase()
+        .trim()                         // Remove leading/trailing spaces
+        .replace(/\s+/g, '-')           // Replace spaces with hyphens
+        .replace(/[^a-z0-9-]/g, '')     // Remove any chars that aren't a-z, 0-9, or -
+        .replace(/-+/g, '-')            // Replace multiple hyphens with single hyphen
+        .replace(/^-|-$/g, '');         // Remove leading/trailing hyphens
       
-      // Validate slug format
-      if (!/^[a-z0-9-]{2,30}$/.test(slug)) {
-        alert("Space name must be 2-30 characters and contain only lowercase letters, numbers, and hyphens");
+      // Ensure slug is not empty
+      if (slug.length === 0) {
+        slug = 'space'; // Default fallback
+      }
+      
+      // Ensure slug is not longer than 40 characters
+      if (slug.length > 40) {
+        slug = slug.substring(0, 40).replace(/-$/, ''); // Trim and remove trailing hyphen
+      }
+      
+      console.log('Generated slug:', slug);
+      
+      // Validate slug format (1-40 chars, no leading/trailing hyphens)
+      if (!/^[a-z0-9-]{1,40}$/.test(slug) || slug.startsWith('-') || slug.endsWith('-')) {
+        alert(`Invalid slug generated: "${slug}". Please use a different name with only letters, numbers, and spaces.`);
         return;
       }
       
