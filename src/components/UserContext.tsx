@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createClient } from "@/utils/supabase/client";
 
 interface User {
   id: string;
@@ -24,6 +25,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const fetchUsers = async () => {
     try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/workspace-users');
       if (response.ok) {
         const data = await response.json();

@@ -43,9 +43,14 @@ export async function GET(request: NextRequest) {
       membersError
     });
 
-    const memberIds = Array.from(new Set(workspaceMembers?.map(wm => wm.user_id) || []));
+    const memberIds = Array.from(new Set(
+      workspaceMembers
+        ?.map(wm => wm.user_id)
+        .filter(id => id !== null && id !== undefined) || []
+    ));
 
     if (memberIds.length === 0) {
+      console.log("workspace-users API: No valid member IDs found");
       return NextResponse.json({ users: [] });
     }
 
