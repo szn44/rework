@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  ClientSideSuspense,
-  useMutation,
-  useStorage,
-} from "@liveblocks/react/suspense";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { RubbishIcon } from "@/icons/RubbishIcon";
@@ -12,60 +7,44 @@ import { getPreviewData, LinkPreviewMetadata } from "@/actions/preview";
 import { DeleteIcon } from "@/icons/DeleteIcon";
 import { PlusIcon } from "@/icons/PlusIcon";
 import { SubmitIcon } from "@/icons/SubmitIcon";
-import { ImmutableStorage } from "@/liveblocks.config";
+import { useIssue } from "@/app/IssueProvider";
 
 export function IssueLinks({
   storageFallback,
 }: {
-  storageFallback: ImmutableStorage;
+  storageFallback: any;
 }) {
-  return (
-    <ClientSideSuspense
-      fallback={
-        <div>
-          <div className="flex justify-between items-center text-sm font-medium text-neutral-500">
-            Links{" "}
-          </div>
-          {storageFallback.links ? (
-            <div>
-              {storageFallback.links.toReversed().map((link: string) => (
-                <LinkPreview key={link} link={link} onlyPlaceholder={true} />
-              ))}
-            </div>
-          ) : null}
-        </div>
-      }
-    >
-      <Links />
-    </ClientSideSuspense>
-  );
-}
-
-function Links() {
+  const { issue } = useIssue();
+  const [links, setLinks] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
   const [url, setUrl] = useState("");
-  const links = useStorage((root) => root.links);
 
-  const addLink = useMutation(
-    ({ storage }, e) => {
-      e.preventDefault();
+  // Initialize links from issue data or fallback
+  useEffect(() => {
+    const issueLinks = issue?.links || storageFallback?.links || [];
+    setLinks(Array.isArray(issueLinks) ? issueLinks : []);
+  }, [issue, storageFallback]);
 
-      // Already added, no duplicates
-      if (storage.get("links").findIndex((val) => val === url) !== -1) {
-        return;
-      }
+  const addLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url || links.includes(url)) return;
 
-      storage.get("links").push(url);
-      setCreating(false);
-      setUrl("");
-    },
-    [url]
-  );
+    const newLinks = [...links, url];
+    setLinks(newLinks);
+    setCreating(false);
+    setUrl("");
 
-  const removeLink = useMutation(({ storage }, link) => {
-    const index = storage.get("links").findIndex((val) => val === link);
-    storage.get("links").delete(index);
-  }, []);
+    // TODO: Save to database when links column is added
+    // await updateIssue({ links: newLinks });
+  };
+
+  const removeLink = async (linkToRemove: string) => {
+    const newLinks = links.filter(link => link !== linkToRemove);
+    setLinks(newLinks);
+
+    // TODO: Save to database when links column is added
+    // await updateIssue({ links: newLinks });
+  };
 
   return (
     <div>
@@ -105,7 +84,7 @@ function Links() {
         </form>
       ) : null}
       <div>
-        {links.toReversed().map((link) => (
+        {[...links].reverse().map((link) => (
           <LinkPreview
             key={link}
             link={link}

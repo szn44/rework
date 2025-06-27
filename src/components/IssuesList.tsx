@@ -1,6 +1,6 @@
 "use client";
 
-import { LABELS, PRIORITY_STATES, PROJECTS, RoomWithMetadata } from "@/config";
+import { LABELS, PRIORITY_STATES, PROJECTS, IssueItem } from "@/config";
 import { DashIcon } from "@/icons/DashIcon";
 import { ProgressInReviewIcon } from "@/icons/ProgressInReviewIcon";
 import { ProgressInProgressIcon } from "@/icons/ProgressInProgressIcon";
@@ -16,28 +16,20 @@ import { useSpace } from "./SpaceContext";
 import { usePathname } from "next/navigation";
 
 export function IssuesList({
-  initialRooms,
+  initialIssues,
   hideHeader = false,
 }: {
-  initialRooms: RoomWithMetadata[];
+  initialIssues: IssueItem[];
   hideHeader?: boolean;
 }) {
-  const rooms = initialRooms;
+  const issues = initialIssues;
 
-  // Use client-side metadata processing (simplified version)
-  const roomsWithProgress = useMemo(() => {
-    return rooms.map((room) => {
-      const metadata = getMetadataFromRoom(room);
-      return { ...room, actualProgress: metadata.progress };
-    });
-  }, [rooms]);
-
-  // Filter based on actual progress values
-  const inReview = useMemo(() => roomsWithProgress.filter((room) => room.actualProgress === "review"), [roomsWithProgress]);
-  const inProgress = useMemo(() => roomsWithProgress.filter((room) => room.actualProgress === "progress"), [roomsWithProgress]);  
-  const todo = useMemo(() => roomsWithProgress.filter((room) => room.actualProgress === "todo"), [roomsWithProgress]);
-  const none = useMemo(() => roomsWithProgress.filter((room) => room.actualProgress === "none"), [roomsWithProgress]);
-  const done = useMemo(() => roomsWithProgress.filter((room) => room.actualProgress === "done"), [roomsWithProgress]);
+  // Filter based on issue progress values
+  const inReview = useMemo(() => issues.filter((item) => item.metadata.progress === "review"), [issues]);
+  const inProgress = useMemo(() => issues.filter((item) => item.metadata.progress === "progress"), [issues]);  
+  const todo = useMemo(() => issues.filter((item) => item.metadata.progress === "todo"), [issues]);
+  const none = useMemo(() => issues.filter((item) => item.metadata.progress === "none"), [issues]);
+  const done = useMemo(() => issues.filter((item) => item.metadata.progress === "done"), [issues]);
 
   return (
     <div>
@@ -46,7 +38,7 @@ export function IssuesList({
           <div className="flex items-center gap-3">
             <h1 className="font-semibold text-neutral-900">Issues</h1>
             <div className="text-xs text-neutral-500">
-              {rooms.length} issue{rooms.length !== 1 ? 's' : ''}
+              {issues.length} issue{issues.length !== 1 ? 's' : ''}
             </div>
           </div>
           <CreateIssueButton />
@@ -61,11 +53,11 @@ export function IssuesList({
           {todo.length + none.length}
         </span>
       </div>
-      {todo.map((room) => (
-        <Row key={room.id} room={room} />
+      {todo.map((issue) => (
+        <Row key={issue.issue.id} issue={issue} />
       ))}
-      {none.map((room) => (
-        <Row key={room.id} room={room} />
+      {none.map((issue) => (
+        <Row key={issue.issue.id} issue={issue} />
       ))}
       {(todo.length === 0 && none.length === 0) && (
         <EmptyStateRow progressType="todo" />
@@ -79,8 +71,8 @@ export function IssuesList({
           {inProgress.length}
         </span>
       </div>
-      {inProgress.map((room) => (
-        <Row key={room.id} room={room} />
+      {inProgress.map((issue) => (
+        <Row key={issue.issue.id} issue={issue} />
       ))}
       {inProgress.length === 0 && (
         <EmptyStateRow progressType="progress" />
@@ -94,8 +86,8 @@ export function IssuesList({
           {inReview.length}
         </span>
       </div>
-      {inReview.map((room) => (
-        <Row key={room.id} room={room} />
+      {inReview.map((issue) => (
+        <Row key={issue.issue.id} issue={issue} />
       ))}
       {inReview.length === 0 && (
         <EmptyStateRow progressType="review" />
@@ -109,8 +101,8 @@ export function IssuesList({
           {done.length}
         </span>
       </div>
-      {done.map((room) => (
-        <Row key={room.id} room={room} />
+      {done.map((issue) => (
+        <Row key={issue.issue.id} issue={issue} />
       ))}
       {done.length === 0 && (
         <EmptyStateRow progressType="done" />
@@ -119,16 +111,19 @@ export function IssuesList({
   );
 }
 
-export function Row({ room }: { room: RoomWithMetadata }) {
+export function Row({ issue }: { issue: IssueItem }) {
   const { navigateToIssue } = useNavigation();
-  const { issueId, title, priority, progress, assignedTo, labels, project } =
-    getMetadataFromRoom(room);
+  const { issueId, title, priority, progress, assignedTo, labels, project } = issue.metadata;
 
   // Handle both legacy single assignee and new multiple assignee format
-  const assigneeIds = Array.isArray(assignedTo) ? assignedTo : (assignedTo && assignedTo !== "none" ? [assignedTo] : []);
+  const assigneeIds = Array.isArray(assignedTo) 
+    ? assignedTo 
+    : (typeof assignedTo === 'string' && assignedTo !== "none" && assignedTo !== "" 
+       ? assignedTo.split(',').filter(Boolean) 
+       : []);
 
   const date = (() => {
-    const createdAt = room.createdAt;
+    const createdAt = issue.issue.created_at;
     if (typeof createdAt === 'string') {
       return new Date(createdAt).toLocaleDateString("en-US", {
         month: "short",
@@ -287,24 +282,3 @@ function CreateIssueWithProgress({ progressType }: { progressType: string }) {
   );
 }
 
-function getMetadataFromRoom(room: RoomWithMetadata) {
-  // Client-side version: use room metadata directly
-  // Helper function to convert LiveList to array if needed
-  const getAssigneeArray = (assignedTo: any) => {
-    if (!assignedTo) return [];
-    if (Array.isArray(assignedTo)) return assignedTo;
-    if (assignedTo.toArray) return assignedTo.toArray(); // LiveList
-    if (assignedTo === "none" || assignedTo === "" || assignedTo === "Todo") return [];
-    return [assignedTo]; // Single value
-  };
-
-  return {
-    issueId: room.metadata.issueId,
-    title: room.metadata.title || "Untitled",
-    progress: room.metadata.progress || "none",
-    priority: room.metadata.priority || "none",
-    assignedTo: getAssigneeArray(room.metadata.assignedTo) || [],
-    labels: room.metadata.labels || [],
-    project: room.metadata.project,
-  };
-}

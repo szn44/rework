@@ -1,4 +1,3 @@
-import { RoomData } from "@liveblocks/node";
 import { PriorityHighIcon } from "@/icons/PriorityHighIcon";
 import { PriorityMediumIcon } from "@/icons/PriorityMediumIcon";
 import { PriorityLowIcon } from "@/icons/PriorityLowIcon";
@@ -8,6 +7,7 @@ import { ProgressTodoIcon } from "@/icons/ProgressTodoIcon";
 import { ProgressInProgressIcon } from "@/icons/ProgressInProgressIcon";
 import { ProgressInReviewIcon } from "@/icons/ProgressInReviewIcon";
 import { ProgressDoneIcon } from "@/icons/ProgressDoneIcon";
+import { Database } from "@/types/database";
 
 export const LABELS = [
   { id: "feature", text: "Feature", jsx: <>Feature</> },
@@ -143,19 +143,41 @@ export type Space = (typeof SPACES)[number]["id"];
 export type Project = (typeof PROJECTS)[number]["id"];
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number]["id"];
 
-export function getRoomId(issueId: string) {
-  return `liveblocks:examples:nextjs-project-manager-${issueId}`;
+// Database-driven types to replace Liveblocks Room types
+type IssueFromDB = Database["public"]["Tables"]["issues"]["Row"];
+type WorkspaceFromDB = Database["public"]["Tables"]["workspaces"]["Row"];
+type SpaceFromDB = Database["public"]["Tables"]["spaces"]["Row"];
+
+export interface IssueWithRelations extends IssueFromDB {
+  workspaces?: WorkspaceFromDB | null;
+  spaces?: SpaceFromDB | null;
 }
 
-export type Metadata = {
+export interface IssueMetadata {
   issueId: string;
   title: string;
   progress: ProgressState;
   priority: PriorityState;
-  assignedTo: string | "none"; // Keep as string for metadata, LiveList only in storage
+  assignedTo: string[] | string | "none";
   labels: string[];
-  project?: string; // Keep for backward compatibility
-  space?: string; // New space field
-};
+  project?: string;
+  space?: string;
+}
 
-export type RoomWithMetadata = RoomData & { metadata: Metadata };
+export interface IssueItem {
+  issue: IssueWithRelations;
+  metadata: IssueMetadata;
+}
+
+// Legacy type for backward compatibility (will be phased out)
+export type Metadata = IssueMetadata;
+export type RoomWithMetadata = {
+  type: string;
+  id: string;
+  metadata: Metadata;
+  createdAt: string;
+  lastConnectionAt: string;
+  usersAccesses: Record<string, any>;
+  groupsAccesses: Record<string, any>;
+  defaultAccesses: string[];
+};

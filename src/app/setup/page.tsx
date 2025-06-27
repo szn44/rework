@@ -10,20 +10,19 @@ export default async function SetupPage() {
     redirect('/login')
   }
 
-  // Check if user already has organizations
-  const { data: organizations } = await supabase
-    .from("organization_members")
+  // Check if user already has workspaces
+  const { data: workspaces, error: workspaceError } = await supabase
+    .from("workspace_members")
     .select(`
-      organizations (
+      workspaces (
         id,
-        name,
         slug
       )
     `)
     .eq("user_id", user.id)
 
-  // If user has organizations, redirect to main app
-  if (organizations && organizations.length > 0) {
+  // If user has workspaces, redirect to main app
+  if (workspaces && workspaces.length > 0 && workspaces.some(w => w.workspaces)) {
     redirect('/')
   }
 
@@ -35,7 +34,7 @@ export default async function SetupPage() {
             Welcome to Rework
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Let's get you started by creating your first organization
+            Let's get you started by creating your first workspace
           </p>
         </div>
         

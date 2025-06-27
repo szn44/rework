@@ -4,7 +4,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { motion, AnimatePresence } from "framer-motion";
 import { KanbanCard } from "./KanbanCard";
-import { RoomWithMetadata } from "@/config";
+import { IssueItem } from "@/config";
 import { useWorkspace } from "./WorkspaceContext";
 import { useSpace } from "./SpaceContext";
 import { useState } from "react";
@@ -14,18 +14,7 @@ interface KanbanColumnProps {
   title: string;
   icon: React.ReactNode;
   color: string;
-  items: Array<{
-    room: RoomWithMetadata;
-    metadata: {
-      issueId: string;
-      title: string;
-      priority: string;
-      progress: string;
-      assignedTo: string[];
-      labels: string[];
-      project?: string;
-    };
-  }>;
+  items: IssueItem[];
   type: "issue" | "project";
 }
 
@@ -142,12 +131,12 @@ export function KanbanColumn({ id, title, icon, color, items, type }: KanbanColu
           }}
         />
         
-        <SortableContext items={items.map(item => item.room.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={items.map(item => item.metadata.issueId)} strategy={verticalListSortingStrategy}>
           <div className="relative z-10 p-2.5 space-y-2.5 overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 200px)', maxHeight: 'calc(100vh - 200px)' }}>
             <AnimatePresence mode="popLayout">
               {items.map((item, index) => (
                 <motion.div
-                  key={item.room.id}
+                  key={item.metadata.issueId}
                   layout
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -159,8 +148,7 @@ export function KanbanColumn({ id, title, icon, color, items, type }: KanbanColu
                   }}
                 >
                   <KanbanCard
-                    room={item.room}
-                    metadata={item.metadata}
+                    issue={item}
                     type={type}
                   />
                 </motion.div>

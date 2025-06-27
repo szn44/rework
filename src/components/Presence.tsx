@@ -1,42 +1,33 @@
 "use client";
 
-import {
-  useOthers,
-  useSelf,
-  ClientSideSuspense,
-} from "@liveblocks/react/suspense";
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 export function Presence() {
-  return (
-    <ClientSideSuspense
-      fallback={
-        <div className="w-7 h-7 bg-neutral-100 aniamte-pulse rounded-full" />
-      }
-    >
-      <Avatars />
-    </ClientSideSuspense>
-  );
-}
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const supabase = createClient();
 
-function Avatars() {
-  const users = useOthers();
-  const currentUser = useSelf();
+  useEffect(() => {
+    async function getCurrentUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    }
+    getCurrentUser();
+  }, []);
 
+  if (!currentUser) {
+    return <div className="w-7 h-7 bg-neutral-100 animate-pulse rounded-full" />;
+  }
+
+  // For now, just show the current user. Later we can implement presence tracking
   return (
     <div className="flex">
-      <div className="flex [&>div]:-ml-1.5">
-        {users.map(({ connectionId, info, presence }) => {
-          return (
-            <Avatar key={connectionId} src={info.avatar} name={info.name} />
-          );
-        })}
+      <div className="relative">
+        <Avatar 
+          src={currentUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.email}`}
+          name={currentUser.email || "User"} 
+        />
       </div>
-
-      {currentUser && (
-        <div className="relative ml-3 first:ml-0">
-          <Avatar src={currentUser.info.avatar} name={currentUser.info.name} />
-        </div>
-      )}
     </div>
   );
 }

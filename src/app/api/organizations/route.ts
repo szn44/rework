@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import { CreateOrganizationRequest } from '@/types/database'
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,21 +45,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body: CreateOrganizationRequest = await request.json()
+    const body = await request.json()
     const { name, slug } = body
 
     if (!name || !slug) {
       return NextResponse.json({ error: "Name and slug are required" }, { status: 400 })
     }
 
-    // Validate slug format
+    // Validate slug format (lowercase for organization slugs)
     if (!/^[a-z0-9-]{3,20}$/.test(slug)) {
       return NextResponse.json({ 
-        error: "Slug must be 3-20 characters, lowercase letters, numbers, and hyphens only" 
+        error: "Organization slug must be 3-20 characters, lowercase letters, numbers, and hyphens only" 
       }, { status: 400 })
     }
 
-    // Check if slug is already taken
+    // Check if organization slug is already taken
     const { data: existingOrg } = await supabase
       .from("organizations")
       .select("slug")
@@ -87,14 +86,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: orgError.message }, { status: 500 })
     }
 
-    // Add creator as owner
+    // Add creator as member with owner role
     const { error: memberError } = await supabase
       .from("organization_members")
       .insert({
         user_id: user.id,
         org_id: organization.id,
-        role: 'owner',
-        joined_at: new Date().toISOString()
+        role: 'owner'
       })
 
     if (memberError) {

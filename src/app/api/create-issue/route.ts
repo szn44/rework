@@ -1,7 +1,4 @@
-import { liveblocks } from "@/liveblocks.server.config";
 import { createClient } from "@/utils/supabase/server";
-import { LiveObject, LiveList } from "@liveblocks/client";
-import { toPlainLson } from "@liveblocks/core";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
@@ -30,7 +27,7 @@ export async function POST(request: NextRequest) {
     const { data: membership } = await supabase
       .from("workspace_members")
       .select("role")
-      .eq("member_id", user.id)
+      .eq("user_id", user.id)
       .eq("workspace_id", requestData.workspace_id)
       .single();
 
@@ -46,6 +43,17 @@ export async function POST(request: NextRequest) {
     const assignee_ids = requestData.assignee_ids || [];
     const space_id = requestData.space_id || null;
 
+    // Default content for the issue (Lexical editor format)
+    const defaultContent = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: description ? [{ type: "text", text: description }] : []
+        }
+      ]
+    };
+
     console.log("Creating issue with:", { title, status, priority, space_id });
 
     // Create issue in Supabase (triggers will auto-populate fields)
@@ -54,6 +62,8 @@ export async function POST(request: NextRequest) {
       .insert({
         title,
         description,
+        content: defaultContent,
+        content_text: description,
         status,
         priority,
         assignee_ids,
@@ -68,9 +78,10 @@ export async function POST(request: NextRequest) {
         title,
         status,
         priority,
-        liveblocks_room_id,
         space_id,
-        assignee_ids
+        assignee_ids,
+        content,
+        content_text
       `)
       .single();
 
@@ -104,78 +115,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Generated display issue ID:", displayIssueId);
-
-    // Create Liveblocks room
-    const roomId = issue.liveblocks_room_id;
-    console.log("Creating Liveblocks room:", roomId);
-
-    const metadata = {
-      issueId: displayIssueId,
-      title: issue.title,
-      progress: issue.status,
-      priority: issue.priority,
-      assignedTo: issue.assignee_ids?.length > 0 ? issue.assignee_ids.join(",") : "none",
-      labels: [],
-      space: spaceSlug || "general",
-      project: issue.workspace_slug,
-    };
-
-    console.log("Creating room with metadata:", metadata);
-
-    try {
-      // First try to create the room
-      await liveblocks.createRoom(roomId, {
-        defaultAccesses: ["room:write"],
-        metadata,
-        usersAccesses: {
-          [user.id]: ["room:write"]
-        }
-      });
-      console.log("Room created successfully");
-    } catch (roomError: any) {
-      console.log("Room creation error:", roomError);
-      
-      // If room already exists, try to update it instead
-      if (roomError.message?.includes("already exists") || roomError.status === 409) {
-        console.log("Room already exists, updating metadata and access...");
-        try {
-          await liveblocks.updateRoom(roomId, {
-            metadata,
-            usersAccesses: {
-              [user.id]: ["room:write"]
-            }
-          });
-          console.log("Room updated successfully");
-        } catch (updateError) {
-          console.error("Failed to update existing room:", updateError);
-          // Continue anyway - the room exists, which is what matters
-        }
-      } else {
-        // For other errors, throw them
-        throw roomError;
-      }
-    }
-
-    // Initialize storage
-    const initialStorage = new LiveObject({
-      meta: new LiveObject({ title: issue.title }),
-      properties: new LiveObject({
-        progress: issue.status,
-        priority: issue.priority,
-        assignedTo: new LiveList(issue.assignee_ids || []),
-      }),
-      labels: new LiveList([]),
-      links: new LiveList([]),
-      space: spaceSlug || "general",
-      project: issue.workspace_slug,
-    });
-
-    await liveblocks.initializeStorageDocument(
-      roomId,
-      toPlainLson(initialStorage) as any
-    );
-
-    console.log("Liveblocks room created and initialized");
 
     // Revalidate relevant pages
     revalidatePath("/");

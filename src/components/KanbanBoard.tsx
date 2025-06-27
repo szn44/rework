@@ -15,7 +15,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { KanbanColumn } from "./KanbanColumn";
 import { KanbanCard } from "./KanbanCard";
-import { RoomWithMetadata } from "@/config";
+import { IssueItem } from "@/config";
 import { useNavigation } from "./NavigationContext";
 import { ProgressTodoIcon } from "@/icons/ProgressTodoIcon";
 import { ProgressInProgressIcon } from "@/icons/ProgressInProgressIcon";
@@ -23,20 +23,9 @@ import { ProgressInReviewIcon } from "@/icons/ProgressInReviewIcon";
 import { ProgressDoneIcon } from "@/icons/ProgressDoneIcon";
 
 interface KanbanBoardProps {
-  items: Array<{
-    room: RoomWithMetadata;
-    metadata: {
-      issueId: string;
-      title: string;
-      priority: string;
-      progress: string;
-      assignedTo: string[];
-      labels: string[];
-      project?: string;
-    };
-  }>;
+  items: IssueItem[];
   type: "issue" | "project";
-  onProgressChange?: (roomId: string, newProgress: string) => void;
+  onProgressChange?: (issueId: string, newProgress: string) => void;
 }
 
 const ISSUE_COLUMNS = [
@@ -135,7 +124,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
   }, [localItems, columns]);
 
   const activeItem = useMemo(() => {
-    return localItems.find(item => item.room.id === activeId);
+    return localItems.find(item => item.metadata.issueId === activeId);
   }, [activeId, localItems]);
 
   function handleDragStart(event: DragStartEvent) {
@@ -152,18 +141,18 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
     
     // Find which columns the active and over items belong to
     const activeColumn = columns.find(col => 
-      columnItems[col.id]?.some(item => item.room.id === activeId)
+      columnItems[col.id]?.some(item => item.metadata.issueId === activeId)
     );
     const overColumn = columns.find(col => col.id === overId) || 
                       columns.find(col => 
-                        columnItems[col.id]?.some(item => item.room.id === overId)
+                        columnItems[col.id]?.some(item => item.metadata.issueId === overId)
                       );
     
     if (!activeColumn || !overColumn || activeColumn === overColumn) return;
     
     // Move item between columns
     setLocalItems(prevItems => {
-      const activeItem = prevItems.find(item => item.room.id === activeId);
+      const activeItem = prevItems.find(item => item.metadata.issueId === activeId);
       if (!activeItem) return prevItems;
       
       const updatedItem = {
@@ -175,7 +164,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
       };
       
       return prevItems.map(item => 
-        item.room.id === activeId ? updatedItem : item
+        item.metadata.issueId === activeId ? updatedItem : item
       );
     });
   }
@@ -196,7 +185,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
     
     // CRITICAL FIX: Find the active item from ORIGINAL items, not local items
     // This prevents comparison against optimistically updated local state
-    const activeItem = items.find(item => item.room.id === activeId);
+    const activeItem = items.find(item => item.metadata.issueId === activeId);
     if (!activeItem) {
       console.log('Active item not found in original items:', activeId);
       return;
@@ -211,7 +200,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
     if (!targetColumn) {
       // If not dropping on column, check if dropping on an item and find its column
       for (const column of columns) {
-        if (columnItems[column.id]?.some(item => item.room.id === overId)) {
+        if (columnItems[column.id]?.some(item => item.metadata.issueId === overId)) {
           targetColumn = column;
           break;
         }
@@ -244,7 +233,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
       // Immediately update local state for optimistic UI
       setLocalItems(prevItems => 
         prevItems.map(item => 
-          item.room.id === activeId 
+          item.metadata.issueId === activeId 
             ? {
                 ...item,
                 metadata: {
@@ -258,7 +247,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
       
       // Call the progress change handler
       if (onProgressChange) {
-        console.log('🚀 KANBAN: Calling onProgressChange with roomId:', activeId);
+        console.log('🚀 KANBAN: Calling onProgressChange with issueId:', activeId);
         onProgressChange(activeId, newProgress);
       } else {
         console.error('🚀 KANBAN: ERROR - onProgressChange handler is not provided!');
@@ -305,8 +294,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
           {activeItem && (
             <div className="rotate-3 scale-105">
               <KanbanCard
-                room={activeItem.room}
-                metadata={activeItem.metadata}
+                issue={activeItem}
                 type={type}
               />
             </div>

@@ -3,26 +3,18 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { PRIORITY_STATES, LABELS, PROJECTS, RoomWithMetadata } from "@/config";
+import { PRIORITY_STATES, LABELS, PROJECTS, IssueItem } from "@/config";
 import { StackedAvatars } from "./StackedAvatars";
 import { useNavigation } from "./NavigationContext";
 
 interface KanbanCardProps {
-  room: RoomWithMetadata;
-  metadata: {
-    issueId: string;
-    title: string;
-    priority: string;
-    progress: string;
-    assignedTo: string[];
-    labels: string[];
-    project?: string;
-  };
+  issue: IssueItem;
   type: "issue" | "project";
 }
 
-export function KanbanCard({ room, metadata, type }: KanbanCardProps) {
+export function KanbanCard({ issue, type }: KanbanCardProps) {
   const { navigateToIssue } = useNavigation();
+  const { metadata } = issue;
   const {
     attributes,
     listeners,
@@ -30,7 +22,7 @@ export function KanbanCard({ room, metadata, type }: KanbanCardProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: room.id });
+  } = useSortable({ id: metadata.issueId });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -38,7 +30,7 @@ export function KanbanCard({ room, metadata, type }: KanbanCardProps) {
   };
 
   const date = (() => {
-    const createdAt = room.createdAt;
+    const createdAt = issue.issue.created_at;
     if (typeof createdAt === 'string') {
       return new Date(createdAt).toLocaleDateString("en-US", {
         month: "short",

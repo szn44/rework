@@ -7,7 +7,6 @@ interface Workspace {
   id: string;
   name: string;
   slug: string;
-  org_id: string;
 }
 
 interface WorkspaceContextType {
@@ -42,11 +41,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             workspaces (
               id,
               name,
-              slug,
-              org_id
+              slug
             )
           `)
-          .eq("member_id", user.id);
+          .eq("user_id", user.id);
 
         const workspacesList = workspaceMemberships
           ?.map(m => m.workspaces as any)

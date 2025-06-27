@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
         .from("workspace_members")
         .select("id")
         .eq("workspace_id", workspaceId)
-        .eq("member_id", user.id)
+        .eq("user_id", user.id)
         .single();
 
       if (!membership) {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       const { data: workspaces } = await supabase
         .from("workspace_members")
         .select("workspace_id")
-        .eq("member_id", user.id);
+        .eq("user_id", user.id);
 
       const workspaceIds = workspaces?.map(w => w.workspace_id) || [];
 
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       .from("workspace_members")
       .select("id")
       .eq("workspace_id", workspace_id)
-      .eq("member_id", user.id)
+      .eq("user_id", user.id)
       .single();
 
     if (!membership) {

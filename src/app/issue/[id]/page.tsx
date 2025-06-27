@@ -1,5 +1,4 @@
-import { Room } from "@/app/Room";
-import RoomErrors from "@/components/RoomErrors";
+import { IssueProvider } from "@/app/IssueProvider";
 import { Issue } from "@/components/Issue";
 import { Inbox } from "@/components/Inbox";
 import { DisplayWhenInboxOpen } from "@/components/InboxContext";
@@ -13,7 +12,7 @@ export default async function PageHome({
   params: { id: string };
 }) {
   return (
-    <Room issueId={id}>
+    <IssueProvider issueId={id}>
       <ResponsiveLayout>
         <main className="m-2 border flex-grow bg-white rounded flex flex-row overflow-hidden">
           <DisplayWhenInboxOpen>
@@ -26,7 +25,6 @@ export default async function PageHome({
           </div>
         </main>
       </ResponsiveLayout>
-      <RoomErrors />
-    </Room>
+    </IssueProvider>
   );
 }

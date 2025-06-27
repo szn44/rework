@@ -1,14 +1,9 @@
 "use client";
 
-import {
-  ClientSideSuspense,
-  useMutation,
-  useStorage,
-} from "@liveblocks/react/suspense";
 import { Select } from "@/components/Select";
 import { PlusIcon } from "@/icons/PlusIcon";
-import { ImmutableStorage } from "@/liveblocks.config";
 import { useEffect, useState } from "react";
+import { useIssue } from "@/app/IssueProvider";
 
 interface Space {
   id: string;
@@ -20,8 +15,9 @@ interface Space {
 export function IssueProject({
   storageFallback,
 }: {
-  storageFallback: ImmutableStorage;
+  storageFallback?: any;
 }) {
+  const { issue, updateIssue } = useIssue();
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,81 +42,34 @@ export function IssueProject({
     );
   }
 
-  return (
-    <ClientSideSuspense
-      fallback={
-        <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap min-h-[26px] pointer-events-none">
-          {(storageFallback.space || storageFallback.project) && spaces.find(s => s.slug === (storageFallback.space || storageFallback.project)) && (
-            <div className="text-sm font-medium rounded-full px-2 py-0.5 border shadow-xs flex items-center gap-1.5 select-none text-neutral-700">
-              <div 
-                className="rounded-full w-2 h-2" 
-                style={{ backgroundColor: spaces.find(s => s.slug === (storageFallback.space || storageFallback.project))?.color || "#6B7280" }}
-              />
-              {spaces.find(s => s.slug === (storageFallback.space || storageFallback.project))?.name}
-              <div className="text-base leading-none pb-0.5 text-neutral-400">
-                ×
-              </div>
-            </div>
-          )}
-        </div>
-      }
-    >
-      <Space spaces={spaces} />
-    </ClientSideSuspense>
-  );
-}
+  if (!issue) {
+    return (
+      <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap min-h-[26px] pointer-events-none">
+        <div className="text-neutral-400">Loading issue...</div>
+      </div>
+    );
+  }
 
-function Space({ spaces }: { spaces: Space[] }) {
-  const space = useStorage((root) => root.space);
-  const project = useStorage((root) => root.project); // For backward compatibility
-
-  const setSpace = useMutation(({ storage }, spaceSlug) => {
-    storage.set("space", spaceSlug);
-    // Also update project for backward compatibility
-    storage.set("project", spaceSlug);
-  }, []);
-
-  const removeSpace = useMutation(({ storage }) => {
-    storage.delete("space");
-    storage.delete("project");
-  }, []);
-
-  // Handle API call separately from mutation
-  const updateSpaceMetadata = async (spaceSlug: string) => {
+  const handleSetSpace = async (spaceSlug: string) => {
     try {
-      const response = await fetch('/api/update-issue', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          roomId: window.location.pathname.includes('/issue/') ? 
-            `liveblocks:examples:nextjs-project-manager-${window.location.pathname.split('/issue/')[1]}` :
-            undefined,
-          metadata: {
-            space: spaceSlug,
-            project: spaceSlug, // For backward compatibility
-          },
-        }),
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to update issue metadata');
+      // Find the space to get its ID
+      const selectedSpace = spaces.find(s => s.slug === spaceSlug);
+      if (selectedSpace) {
+        await updateIssue({ space_id: selectedSpace.id });
+        console.log('Successfully updated space');
       }
     } catch (error) {
-      console.error('Error updating issue metadata:', error);
+      console.error('Error updating space:', error);
     }
   };
 
-  const handleSetSpace = (spaceSlug: string) => {
-    setSpace(spaceSlug);
-    updateSpaceMetadata(spaceSlug);
-  };
-
-  const handleRemoveSpace = () => {
-    removeSpace();
-    // Also update API metadata to remove space
-    updateSpaceMetadata("");
+  const handleRemoveSpace = async () => {
+    try {
+      await updateIssue({ space_id: null });
+      console.log('Successfully removed space');
+    } catch (error) {
+      console.error('Error removing space:', error);
+    }
   };
 
   const SPACE_LIST = spaces.map((sp) => ({
@@ -134,13 +83,13 @@ function Space({ spaces }: { spaces: Space[] }) {
         <span>{sp.name}</span>
       </div>
     ),
-    disabled: (space || project) === sp.slug,
+    disabled: issue.space_id === sp.id,
   }));
 
-  const selectedSpace = spaces.find(s => s.slug === (space || project));
+  const selectedSpace = spaces.find(s => s.id === issue.space_id);
 
   return (
-    <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap">
+    <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap min-h-[26px]">
       {selectedSpace && (
         <div className="text-sm font-medium rounded-full px-2 py-0.5 border shadow-xs flex items-center gap-1.5 select-none text-neutral-700">
           <div 
@@ -149,7 +98,7 @@ function Space({ spaces }: { spaces: Space[] }) {
           />
           {selectedSpace.name}
           <button
-            className="text-base leading-none pb-0.5 text-neutral-400"
+            className="text-base leading-none pb-0.5 text-neutral-400 hover:text-neutral-600 transition-colors"
             onClick={handleRemoveSpace}
           >
             ×
@@ -175,4 +124,4 @@ function Space({ spaces }: { spaces: Space[] }) {
       )}
     </div>
   );
-} 
+}

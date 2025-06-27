@@ -1,205 +1,210 @@
 "use client";
 
-import {
-  useInboxNotifications,
-  ClientSideSuspense,
-  useUser,
-  useMarkAllInboxNotificationsAsRead,
-  useDeleteAllInboxNotifications,
-  useMarkInboxNotificationAsRead,
-} from "@liveblocks/react/suspense";
-import { InboxNotificationList } from "@liveblocks/react-ui";
-import { Comment } from "@liveblocks/react-ui/primitives";
-import { ErrorBoundary } from "react-error-boundary";
-import { InboxNotificationData } from "@liveblocks/core";
-import { Avatar } from "@/components/Avatar";
+import { useState, useEffect } from "react";
+import { useWorkspace } from "@/components/WorkspaceContext";
+import { IssueWithRelations } from "@/config";
 import classNames from "classnames";
-import { useRoomInfo, useInboxNotificationThread } from "@liveblocks/react";
-import NextLink from "next/link";
-import { useParams } from "next/navigation";
-import { Mention } from "@/components/Mention";
-import { Link } from "@/components/Link";
 import { CheckCheckIcon } from "@/icons/CheckCheckIcon";
-import { useMemo } from "react";
-import { RubbishIcon } from "@/icons/RubbishIcon";
-import { useInbox } from "@/components/InboxContext";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
-export function Inbox() {
+interface InboxProps {
+  onIssueSelect?: (issueId: string) => void;
+}
+
+export function Inbox({ onIssueSelect }: InboxProps) {
+  const [assignedIssues, setAssignedIssues] = useState<IssueWithRelations[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { currentWorkspace } = useWorkspace();
+  const router = useRouter();
+
+  useEffect(() => {
+    async function loadAssignedIssues() {
+      if (!currentWorkspace) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setError("Not authenticated");
+          setLoading(false);
+          return;
+        }
+
+        // Get issues assigned to current user
+        const { data: issues, error: issuesError } = await supabase
+          .from("issues")
+          .select(`
+            id,
+            workspace_slug,
+            issue_number,
+            title,
+            status,
+            priority,
+            assignee_ids,
+            created_at,
+            updated_at,
+            workspaces (
+              name,
+              slug
+            ),
+            spaces (
+              slug,
+              name,
+              color
+            )
+          `)
+          .eq("workspace_slug", currentWorkspace.slug)
+          .contains("assignee_ids", [user.id])
+          .order("updated_at", { ascending: false });
+
+        if (issuesError) {
+          console.error("Error loading assigned issues:", issuesError);
+          setError("Failed to load assigned issues");
+        } else {
+          setAssignedIssues(issues || []);
+        }
+      } catch (err) {
+        console.error("Error loading assigned issues:", err);
+        setError("Failed to load assigned issues");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadAssignedIssues();
+  }, [currentWorkspace]);
+
+  const handleIssueClick = (issue: IssueWithRelations) => {
+    const issueId = `${issue.workspace_slug}-${issue.issue_number}`;
+    if (onIssueSelect) {
+      onIssueSelect(issueId);
+    } else {
+      router.push(`/issue/${issueId}`);
+    }
+  };
+
   return (
-    <ErrorBoundary fallback={<div>Error</div>}>
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 text-sm border-b h-12 bg-white flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             <h1 className="font-semibold text-neutral-900">Inbox</h1>
             <div className="text-xs text-neutral-500">
-              0 notifications
+              {assignedIssues.length} assigned issues
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <InboxActionButtons />
-        </div>
       </div>
-      <ClientSideSuspense fallback={null}>
-        <InboxNotifications />
-      </ClientSideSuspense>
-    </ErrorBoundary>
-  );
-}
-
-function InboxActionButtons() {
-  // Temporarily disabled to debug rapid POST requests
-  // const deleteAll = useDeleteAllInboxNotifications();
-  // const markAsRead = useMarkAllInboxNotificationsAsRead();
-
-  return (
-    <>
-      {/* <button onClick={markAsRead}>
-        <CheckCheckIcon className="w-4 h-4 text-emerald-700" />
-      </button>
-      <button onClick={deleteAll}>
-        <RubbishIcon className="w-4 h-4 text-red-700" />
-      </button> */}
-    </>
-  );
-}
-
-function InboxNotifications() {
-  // Temporarily disabled to debug rapid POST requests
-  // const { inboxNotifications } = useInboxNotifications();
-
-  // // Only show thread notifications, and only one notification for each thread
-  // const filteredNotifications = useMemo(() => {
-  //   const filtered: InboxNotificationData[] = [];
-
-  //   for (const notification of inboxNotifications) {
-  //     if (
-  //       notification.kind === "thread" &&
-  //       !filtered.find(
-  //         (n) => n.kind === "thread" && n.threadId === notification.threadId
-  //       )
-  //     ) {
-  //       filtered.push(notification);
-  //     }
-  //   }
-
-  //   return filtered;
-  // }, [inboxNotifications]);
-
-  // if (!inboxNotifications.length) {
-    return (
-      <div className="text-center text-sm font-medium text-gray-600 p-4 flex justify-center items-center h-full">
-        You have no notifications
-      </div>
-    );
-  // }
-
-  // return (
-  //   <InboxNotificationList>
-  //     {filteredNotifications.map((inboxNotification) => (
-  //       <div className="relative h-[66px] p-1" key={inboxNotification.id}>
-  //         <ClientSideSuspense
-  //           fallback={
-  //             <div className="absolute inset-0 w-full [h-165px] px-3 py-2.5 gap-2 m-1 rounded flex flex-row items-center">
-  //               <div className="h-8 w-8">
-  //                 <div className="rounded-full overflow-hidden">
-  //                   <div className="w-7 h-7 bg-neutral-100 rounded-full animate-pulse" />
-  //                 </div>
-  //               </div>
-  //               <div className="flex-grow w-full overflow-hidden">
-  //                 <div className="font-medium text-neutral-700 truncate">
-  //                   <div className="w-28 h-4 bg-neutral-100  animate-pulse rounded" />
-  //                 </div>
-  //                 <div className="text-xs text-neutral-400 w-full truncate">
-  //                   <div className="w-48 h-4 bg-neutral-100 animate-pulse mt-1 rounded" />
-  //                 </div>
-  //               </div>
-  //             </div>
-  //           }
-  //         >
-  //           <SmallInboxNotification inboxNotification={inboxNotification} />
-  //         </ClientSideSuspense>
-  //       </div>
-  //     ))}
-  //   </InboxNotificationList>
-  // );
-}
-
-function SmallInboxNotification({
-  inboxNotification,
-}: {
-  inboxNotification: InboxNotificationData;
-}) {
-  const params = useParams();
-  const thread = useInboxNotificationThread(inboxNotification.id);
-  const { info, error, isLoading } = useRoomInfo(
-    inboxNotification?.roomId || ""
-  );
-
-  // Get latest non-deleted comment for notification preview
-  const latestComment = useMemo(() => {
-    const filterDeleted = thread.comments.filter(
-      (comment) => !comment?.deletedAt
-    );
-    return filterDeleted[filterDeleted.length - 1];
-  }, [thread]);
-
-  const { user } = useUser(latestComment.userId);
-  const markAsRead = useMarkInboxNotificationAsRead();
-
-  const { openInbox } = useInbox();
-
-  if (
-    !latestComment ||
-    !inboxNotification?.roomId ||
-    isLoading ||
-    error ||
-    !info.metadata.issueId
-  ) {
-    return null;
-  }
-  return (
-    <NextLink
-      href={`/issue/${info?.metadata.issueId}`}
-      onClick={() => {
-        openInbox();
-        markAsRead(inboxNotification.id);
-      }}
-    >
-      <div
-        className={classNames(
-          "flex flex-row items-center px-3 py-2.5 gap-2 rounded",
-          {
-            "bg-blue-100/60": inboxNotification.readAt === null,
-          },
-          {
-            "bg-neutral-200/40":
-              params.id && inboxNotification.roomId.endsWith(`${params.id}`),
-          }
+      
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-sm text-neutral-500">Loading assigned issues...</div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-sm text-red-500">{error}</div>
+          </div>
+        ) : assignedIssues.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-sm text-neutral-500">No assigned issues</div>
+          </div>
+        ) : (
+          <div className="p-2 space-y-2">
+            {assignedIssues.map((issue) => (
+              <IssueCard
+                key={issue.id}
+                issue={issue}
+                onClick={() => handleIssueClick(issue)}
+              />
+            ))}
+          </div>
         )}
-      >
-        <div className="h-8 w-8">
-          <div className="rounded-full overflow-hidden">
-            <Avatar userId={latestComment.userId} />
-          </div>
-        </div>
-        <div className="flex-grow w-full overflow-hidden">
-          <div className="font-medium text-neutral-700 truncate flex justify-between items-center">
-            {info.metadata.title}
-            {inboxNotification.readAt === null ? (
-              <div className="w-2 h-2 bg-indigo-500 rounded-full" />
-            ) : null}
-          </div>
-          <div className="text-xs text-neutral-400 w-full truncate flex items-center gap-[3px]">
-            <span>{user.name}:</span>
-            <Comment.Body
-              className="overflow-hidden *:truncate"
-              body={latestComment.body}
-              components={{ Mention, Link }}
-            />
-          </div>
-        </div>
       </div>
-    </NextLink>
+    </div>
+  );
+}
+
+interface IssueCardProps {
+  issue: IssueWithRelations;
+  onClick: () => void;
+}
+
+function IssueCard({ issue, onClick }: IssueCardProps) {
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'todo':
+        return 'bg-gray-100 text-gray-700';
+      case 'in_progress':
+      case 'in progress':
+        return 'bg-blue-100 text-blue-700';
+      case 'done':
+        return 'bg-green-100 text-green-700';
+      case 'backlog':
+        return 'bg-gray-100 text-gray-600';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+        return 'bg-red-100 text-red-700';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'low':
+        return 'bg-green-100 text-green-700';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer"
+    >
+      <div className="flex items-start justify-between mb-2">
+        <h3 className="font-medium text-gray-900 text-sm line-clamp-2 flex-1">
+          {issue.title || 'Untitled'}
+        </h3>
+      </div>
+      
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-xs text-gray-500">
+          {issue.workspace_slug}-{issue.issue_number}
+        </span>
+        {issue.spaces && (
+          <span 
+            className="text-xs px-2 py-1 rounded-full"
+            style={{ backgroundColor: `${issue.spaces.color}20`, color: issue.spaces.color }}
+          >
+            {issue.spaces.name}
+          </span>
+        )}
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(issue.status)}`}>
+          {issue.status?.replace('_', ' ') || 'No Status'}
+        </span>
+        {issue.priority && (
+          <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(issue.priority)}`}>
+            {issue.priority}
+          </span>
+        )}
+      </div>
+      
+      <div className="text-xs text-gray-500 mt-2">
+        Updated {new Date(issue.updated_at).toLocaleDateString()}
+      </div>
+    </div>
   );
 }

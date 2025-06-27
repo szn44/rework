@@ -1,6 +1,5 @@
 "use client";
 
-import { getRoomId } from "@/config";
 import { useState } from "react";
 import { Loading } from "@/components/Loading";
 import { useRouter } from "next/navigation";

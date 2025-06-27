@@ -9,21 +9,61 @@ import { usePathname, useRouter } from "next/navigation";
 import { CreateIcon } from "@/icons/CreateIcon";
 import { InboxIcon } from "@/icons/InboxIcon";
 // Removed Liveblocks imports to prevent rapid requests
-import { ComponentProps, useState } from "react";
+import { ComponentProps, useState, useEffect } from "react";
 import { Loading } from "@/components/Loading";
 import { ProgressInProgressIcon } from "@/icons/ProgressInProgressIcon";
 import { MyIssuesIcon } from "@/icons/MyIssuesIcon";
 import { WikiIcon } from "@/icons/WikiIcon";
 import { ProjectsIcon } from "@/icons/ProjectsIcon";
 import { Bot, User, Settings as SettingsIcon } from "lucide-react";
+import { CreateSpaceModal } from "./CreateSpaceModal";
+
+interface Space {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+}
 
 export function Nav() {
   const { isOpen, toggleInbox } = useInbox();
   const pathname = usePathname();
   const router = useRouter();
   const [creating, setCreating] = useState(false);
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [loadingSpaces, setLoadingSpaces] = useState(true);
+  const [showCreateSpaceModal, setShowCreateSpaceModal] = useState(false);
   const { currentWorkspace } = useWorkspace();
   const { currentSpace } = useSpace();
+
+  // Load spaces for current workspace
+  useEffect(() => {
+    async function loadSpaces() {
+      if (!currentWorkspace) {
+        setSpaces([]);
+        setLoadingSpaces(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/spaces?workspace_id=${currentWorkspace.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSpaces(data.spaces || []);
+        } else {
+          console.error('Failed to load spaces');
+          setSpaces([]);
+        }
+      } catch (error) {
+        console.error('Error loading spaces:', error);
+        setSpaces([]);
+      } finally {
+        setLoadingSpaces(false);
+      }
+    }
+
+    loadSpaces();
+  }, [currentWorkspace]);
 
   const handleCreateIssue = async () => {
     if (creating) return; // Prevent double-clicks
@@ -61,6 +101,29 @@ export function Nav() {
       console.error("Failed to create issue:", error);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleCreateSpace = () => {
+    if (!currentWorkspace) {
+      console.error("No current workspace selected");
+      return;
+    }
+    setShowCreateSpaceModal(true);
+  };
+
+  const handleSpaceCreated = async () => {
+    // Reload spaces list after creation
+    if (currentWorkspace) {
+      try {
+        const response = await fetch(`/api/spaces?workspace_id=${currentWorkspace.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSpaces(data.spaces || []);
+        }
+      } catch (error) {
+        console.error('Error reloading spaces:', error);
+      }
     }
   };
 
@@ -152,61 +215,41 @@ export function Nav() {
       <div className="mt-6 mb-2">
         <div className="text-xs font-medium text-neutral-500 uppercase tracking-wide px-2 mb-3 flex items-center justify-between">
           <span>Spaces</span>
-          <button className="text-neutral-400 hover:text-neutral-600 w-4 h-4 flex items-center justify-center text-base">
+          <button 
+            onClick={handleCreateSpace}
+            className="text-neutral-400 hover:text-neutral-600 w-4 h-4 flex items-center justify-center text-base transition-colors"
+          >
             +
           </button>
         </div>
         
-        <Link href="/spaces/all-rework">
-          <div
-            className={classNames(
-              "flex items-center justify-between gap-2 w-full text-sm font-medium p-2 rounded-lg text-left transition-colors",
-              { 
-                "bg-neutral-800 text-white": pathname.startsWith("/spaces/all-rework") || pathname === "/wiki",
-                "text-neutral-700 hover:bg-neutral-100": !(pathname.startsWith("/spaces/all-rework") || pathname === "/wiki")
-              }
-            )}
-          >
-            <span className="flex items-center gap-2">
-              <span className="text-neutral-500">#</span>
-              all-rework
-            </span>
-          </div>
-        </Link>
-
-        <Link href="/spaces/new-channel">
-          <div
-            className={classNames(
-              "flex items-center justify-between gap-2 w-full text-sm font-medium p-2 rounded-lg text-left transition-colors",
-              { 
-                "bg-neutral-800 text-white": pathname === "/spaces/new-channel",
-                "text-neutral-700 hover:bg-neutral-100": pathname !== "/spaces/new-channel"
-              }
-            )}
-          >
-            <span className="flex items-center gap-2">
-              <span className="text-neutral-500">#</span>
-              new-channel
-            </span>
-          </div>
-        </Link>
-
-        <Link href="/spaces/social">
-          <div
-            className={classNames(
-              "flex items-center justify-between gap-2 w-full text-sm font-medium p-2 rounded-lg text-left transition-colors",
-              { 
-                "bg-neutral-800 text-white": pathname === "/spaces/social",
-                "text-neutral-700 hover:bg-neutral-100": pathname !== "/spaces/social"
-              }
-            )}
-          >
-            <span className="flex items-center gap-2">
-              <span className="text-neutral-500">#</span>
-              social
-            </span>
-          </div>
-        </Link>
+        {loadingSpaces ? (
+          <div className="text-sm text-neutral-500 p-2">Loading spaces...</div>
+        ) : spaces.length > 0 ? (
+          spaces.map((space) => (
+            <Link key={space.id} href={`/spaces/${space.slug}`}>
+              <div
+                className={classNames(
+                  "flex items-center justify-between gap-2 w-full text-sm font-medium p-2 rounded-lg text-left transition-colors",
+                  { 
+                    "bg-neutral-800 text-white": pathname === `/spaces/${space.slug}` || (pathname === "/wiki" && space.slug === "all-rework"),
+                    "text-neutral-700 hover:bg-neutral-100": !(pathname === `/spaces/${space.slug}` || (pathname === "/wiki" && space.slug === "all-rework"))
+                  }
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <div 
+                    className="w-2 h-2 rounded-full" 
+                    style={{ backgroundColor: space.color }}
+                  />
+                  {space.name}
+                </span>
+              </div>
+            </Link>
+          ))
+        ) : (
+          <div className="text-sm text-neutral-500 p-2 italic">No spaces yet</div>
+        )}
       </div>
 
       {/* Integrations Section */}
@@ -259,6 +302,13 @@ export function Nav() {
           </div>
         </Link>
       </div>
+
+      {/* Create Space Modal */}
+      <CreateSpaceModal
+        isOpen={showCreateSpaceModal}
+        onClose={() => setShowCreateSpaceModal(false)}
+        onSpaceCreated={handleSpaceCreated}
+      />
     </div>
   );
 }

@@ -1,30 +1,25 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useIssue } from "@/app/IssueProvider";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-import {
-  FloatingComposer,
-  FloatingThreads,
-  liveblocksConfig,
-  LiveblocksPlugin,
-  useIsEditorReady,
-} from "@liveblocks/react-lexical";
-import { EditorTitle } from "@/components/EditorTitle";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { EditorState, $getRoot } from "lexical";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { ListNode, ListItemNode } from "@lexical/list";
-import { ClientSideSuspense, useThreads } from "@liveblocks/react/suspense";
 import { ReactNode } from "react";
 import { LinkNode } from "@lexical/link";
 import { CodeNode } from "@lexical/code";
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
-import { ImmutableStorage } from "@/liveblocks.config";
-import { EditorFloatingToolbar } from "./EditorFloatingToolbar";
+import { EditorTitle } from "@/components/EditorTitle";
 
-// Wrap your Lexical config with `liveblocksConfig`
-const initialConfig = liveblocksConfig({
-  namespace: "Demo",
+// Standard Lexical config without Liveblocks
+const initialConfig = {
+  namespace: "IssueEditor",
   nodes: [
     HorizontalRuleNode,
     CodeNode,
@@ -44,41 +39,61 @@ const initialConfig = liveblocksConfig({
       strikethrough: "lexical-strikethrough",
     },
   },
-});
+};
 
 export function Editor({
   contentFallback,
   storageFallback,
 }: {
   contentFallback: ReactNode;
-  storageFallback: ImmutableStorage;
+  storageFallback: any;
 }) {
-  const ready = useIsEditorReady();
+  const { issue, updateIssue } = useIssue();
+  const [isEditorReady, setIsEditorReady] = useState(false);
+
+  useEffect(() => {
+    // Simulate editor ready state
+    const timer = setTimeout(() => setIsEditorReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleEditorChange = async (editorState: EditorState) => {
+    if (!issue) return;
+    
+    // Extract plain text for search indexing
+    let textContent = '';
+    editorState.read(() => {
+      const root = $getRoot();
+      textContent = root.getTextContent();
+    });
+
+    // Debounced save to database
+    try {
+      await updateIssue({
+        content: editorState.toJSON(),
+        content_text: textContent
+      });
+    } catch (error) {
+      console.error('Failed to save content:', error);
+    }
+  };
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <div className="">
         <div className="my-6">
-          <ClientSideSuspense
-            fallback={
-              <div className="block w-full text-2xl font-bold my-6">
-                {storageFallback.meta.title}
-              </div>
-            }
-          >
-            <EditorTitle />
-          </ClientSideSuspense>
+          <EditorTitle />
         </div>
         <div className="relative">
-          <LiveblocksPlugin>
-            {!ready ? (
-              <div className="select-none cursor-wait editor-styles">
-                {contentFallback}
-              </div>
-            ) : (
+          {!isEditorReady ? (
+            <div className="select-none cursor-wait editor-styles">
+              {contentFallback}
+            </div>
+          ) : (
+            <>
               <RichTextPlugin
                 contentEditable={
-                  <ContentEditable className="outline-none editor-styles" />
+                  <ContentEditable className="outline-none editor-styles min-h-[200px]" />
                 }
                 placeholder={
                   <div className="absolute top-0 left-0 pointer-events-none text-neutral-500 whitespace-nowrap">
@@ -87,21 +102,12 @@ export function Editor({
                 }
                 ErrorBoundary={LexicalErrorBoundary}
               />
-            )}
-            <ClientSideSuspense fallback={null}>
-              <TextEditorThreads />
-            </ClientSideSuspense>
-            <FloatingComposer />
-            <EditorFloatingToolbar />
-          </LiveblocksPlugin>
+              <HistoryPlugin />
+              <OnChangePlugin onChange={handleEditorChange} />
+            </>
+          )}
         </div>
       </div>
     </LexicalComposer>
   );
-}
-
-function TextEditorThreads() {
-  const { threads } = useThreads({ query: { resolved: false } });
-
-  return <FloatingThreads threads={threads} />;
 }

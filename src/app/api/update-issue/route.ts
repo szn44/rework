@@ -1,4 +1,3 @@
-import { liveblocks } from "@/liveblocks.server.config";
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,63 +13,79 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { roomId, metadata, ...otherData } = await request.json();
-    console.log("Update request:", { roomId, metadata, otherData });
+    const { issueId, metadata, content, content_text, ...otherData } = await request.json();
+    console.log("Update request:", { issueId, metadata, content, otherData });
 
-    if (!roomId) {
-      return NextResponse.json({ error: "roomId is required" }, { status: 400 });
+    if (!issueId) {
+      return NextResponse.json({ error: "issueId is required" }, { status: 400 });
     }
 
-    // Extract the issue ID from roomId (format: liveblocks:examples:nextjs-project-manager-WORKSPACE-NUMBER or SPACE-NUMBER-spaceslug)
-    const roomIdParts = roomId.replace('liveblocks:examples:nextjs-project-manager-', '');
-    console.log("Room ID parts:", roomIdParts);
-
-    // Parse the issue identifier
+    // Parse the issue ID to extract workspace/space slug and number
     let workspaceSlug: string;
     let issueNumber: number;
-    let isSpaceIssue = false;
+    let spaceSlug: string | null = null;
 
-    // Check if it's a space issue (contains space slug at the end)
-    const spaceIssueMatch = roomIdParts.match(/^([A-Z]+)-(\d+)-([a-z]+)$/);
-    const workspaceIssueMatch = roomIdParts.match(/^([A-Z]+)-(\d+)$/);
-
-    if (spaceIssueMatch) {
-      // Space issue: SPACE-NUMBER-spaceslug
-      const spaceCode = spaceIssueMatch[1];
-      issueNumber = parseInt(spaceIssueMatch[2]);
-      const spaceSlug = spaceIssueMatch[3];
-      
-      // Find the space and get its workspace
-      const { data: space } = await supabase
-        .from("spaces")
-        .select("workspace_id, workspaces(slug)")
-        .eq("slug", spaceSlug)
-        .single();
-      
-      if (!space) {
-        return NextResponse.json({ error: "Space not found" }, { status: 404 });
-      }
-      
-      workspaceSlug = (space.workspaces as any)?.slug;
-      isSpaceIssue = true;
-    } else if (workspaceIssueMatch) {
-      // Workspace issue: WORKSPACE-NUMBER
-      workspaceSlug = workspaceIssueMatch[1];
-      issueNumber = parseInt(workspaceIssueMatch[2]);
-    } else {
-      console.error("Invalid room ID format:", roomIdParts);
-      return NextResponse.json({ error: "Invalid room ID format" }, { status: 400 });
+    // Parse issue ID format: WORKSPACE-NUMBER or SPACE-NUMBER
+    const issueMatch = issueId.match(/^([A-Z]+)-(\d+)$/);
+    if (!issueMatch) {
+      return NextResponse.json({ error: "Invalid issue ID format" }, { status: 400 });
     }
 
-    console.log("Parsed:", { workspaceSlug, issueNumber, isSpaceIssue });
+    const slug = issueMatch[1];
+    issueNumber = parseInt(issueMatch[2]);
+
+    // First, try to find it as a workspace issue
+    const { data: workspace } = await supabase
+      .from("workspaces")
+      .select("slug")
+      .eq("slug", slug)
+      .single();
+
+    if (workspace) {
+      // It's a workspace issue
+      workspaceSlug = slug;
+      spaceSlug = null;
+    } else {
+      // Try to find it as a space issue
+      const { data: space } = await supabase
+        .from("spaces")
+        .select("slug, workspaces(slug)")
+        .ilike("slug", slug.toLowerCase())
+        .single();
+      
+      if (space) {
+        // It's a space issue
+        spaceSlug = space.slug;
+        workspaceSlug = (space.workspaces as any)?.slug;
+      } else {
+        return NextResponse.json({ error: `No workspace or space found with slug: ${slug}` }, { status: 404 });
+      }
+    }
 
     // Find the issue in the database
-    const { data: issue, error: findError } = await supabase
+    let query = supabase
       .from("issues")
       .select("id, workspace_id, space_id")
       .eq("workspace_slug", workspaceSlug)
-      .eq("issue_number", issueNumber)
-      .single();
+      .eq("issue_number", issueNumber);
+
+    if (spaceSlug) {
+      // Space issue - must have space_id
+      const { data: spaceData } = await supabase
+        .from("spaces")
+        .select("id")
+        .eq("slug", spaceSlug)
+        .single();
+      
+      if (spaceData) {
+        query = query.eq("space_id", spaceData.id);
+      }
+    } else {
+      // Workspace issue - space_id must be null
+      query = query.is("space_id", null);
+    }
+
+    const { data: issue, error: findError } = await query.single();
 
     if (findError || !issue) {
       console.error("Issue not found:", findError);
@@ -83,7 +98,7 @@ export async function POST(request: NextRequest) {
     const { data: membership } = await supabase
       .from("workspace_members")
       .select("role")
-      .eq("member_id", user.id)
+      .eq("user_id", user.id)
       .eq("workspace_id", issue.workspace_id)
       .single();
 
@@ -97,9 +112,23 @@ export async function POST(request: NextRequest) {
     if (metadata?.title) updateData.title = metadata.title;
     if (metadata?.progress) updateData.status = metadata.progress;
     if (metadata?.priority) updateData.priority = metadata.priority;
+    if (metadata?.assignedTo) {
+      // Convert assignedTo string to array if needed
+      if (typeof metadata.assignedTo === 'string') {
+        updateData.assignee_ids = metadata.assignedTo === 'none' ? [] : metadata.assignedTo.split(',');
+      } else if (Array.isArray(metadata.assignedTo)) {
+        updateData.assignee_ids = metadata.assignedTo;
+      }
+    }
+    
     if (otherData?.title) updateData.title = otherData.title;
     if (otherData?.status) updateData.status = otherData.status;
     if (otherData?.priority) updateData.priority = otherData.priority;
+    if (otherData?.assignee_ids) updateData.assignee_ids = otherData.assignee_ids;
+    
+    // Handle content updates
+    if (content !== undefined) updateData.content = content;
+    if (content_text !== undefined) updateData.content_text = content_text;
 
     console.log("Update data:", updateData);
 
@@ -116,17 +145,6 @@ export async function POST(request: NextRequest) {
       }
 
       console.log("Issue updated in database");
-    }
-
-    // Update Liveblocks room metadata if provided
-    if (metadata) {
-      try {
-        await liveblocks.updateRoom(roomId, { metadata });
-        console.log("Liveblocks room metadata updated");
-      } catch (liveblooksError) {
-        console.error("Error updating Liveblocks room:", liveblooksError);
-        // Don't fail the request if Liveblocks update fails
-      }
     }
 
     return NextResponse.json({ success: true });

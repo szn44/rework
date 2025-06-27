@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
           )
         )
       `)
-      .eq("member_id", user.id)
+      .eq("user_id", user.id)
 
     // Filter by organization if specified
     if (orgId) {
@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
     const body: CreateWorkspaceRequest = await request.json()
     const { name, slug, org_id } = body
 
-    if (!name || !slug || !org_id) {
-      return NextResponse.json({ error: "Name, slug, and org_id are required" }, { status: 400 })
+    if (!name || !slug) {
+      return NextResponse.json({ error: "Name and slug are required" }, { status: 400 })
     }
 
     // Validate slug format (uppercase for workspace slugs)
@@ -74,28 +74,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Check if user is member of the organization
-    const { data: membership } = await supabase
-      .from("organization_members")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("org_id", org_id)
-      .single()
-
-    if (!membership) {
-      return NextResponse.json({ error: "You must be a member of the organization to create workspaces" }, { status: 403 })
-    }
-
-    // Check if workspace slug is already taken within the organization
+    // Check if workspace slug is already taken globally (since no org_id for now)
     const { data: existingWorkspace } = await supabase
       .from("workspaces")
       .select("slug")
-      .eq("org_id", org_id)
       .eq("slug", slug)
       .single()
 
     if (existingWorkspace) {
-      return NextResponse.json({ error: "Workspace slug already taken in this organization" }, { status: 400 })
+      return NextResponse.json({ error: "Workspace slug already taken" }, { status: 400 })
     }
 
     // Create workspace
@@ -104,7 +91,6 @@ export async function POST(request: NextRequest) {
       .insert({
         name,
         slug,
-        org_id,
         created_by: user.id
       })
       .select()
@@ -119,8 +105,7 @@ export async function POST(request: NextRequest) {
       .from("workspace_members")
       .insert({
         workspace_id: workspace.id,
-        member_id: user.id,
-        member_type: 'user',
+        user_id: user.id,
         role: 'admin' // Workspace creator gets admin role
       })
 

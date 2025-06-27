@@ -1,10 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
-import { liveblocks } from "@/liveblocks.server.config";
-import { RoomWithMetadata } from "@/config";
+import { IssueWithRelations, IssueItem } from "@/config";
 import { IssuesView } from "@/components/IssuesView";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { WikiEditor } from "@/components/WikiEditor";
 import { getIssueIdFromIssue } from "@/utils/issueId";
 
 // Disable caching completely during development to fix sync issues
@@ -18,25 +16,8 @@ export default async function PageIssue() {
     redirect('/login')
   }
 
-  // Check if user has organizations
-  const { data: organizations } = await supabase
-    .from("organization_members")
-    .select(`
-      organizations (
-        id,
-        name,
-        slug
-      )
-    `)
-    .eq("user_id", user.id)
-
-  // If user has no organizations, redirect to setup
-  if (!organizations || organizations.length === 0) {
-    redirect('/setup')
-  }
-
-  // Get user's workspaces to determine which issues to show
-  const { data: workspaces } = await supabase
+  // Check if user has workspaces
+  const { data: workspaces, error: workspaceError } = await supabase
     .from("workspace_members")
     .select(`
       workspaces (
@@ -44,7 +25,12 @@ export default async function PageIssue() {
         slug
       )
     `)
-    .eq("member_id", user.id)
+    .eq("user_id", user.id)
+
+  // If user has no workspaces, redirect to setup
+  if (!workspaces || workspaces.length === 0 || !workspaces.some(w => w.workspaces)) {
+    redirect('/setup')
+  }
 
   const workspaceSlugs = workspaces?.map(w => (w.workspaces as any)?.slug).filter(Boolean) || []
 
@@ -75,8 +61,8 @@ export default async function PageIssue() {
     .in("workspace_slug", workspaceSlugs)
     .order("updated_at", { ascending: false })
 
-  // Convert Supabase issues to RoomWithMetadata format for compatibility
-  const issueRooms: RoomWithMetadata[] = (issues || []).map(issue => {
+  // Convert Supabase issues to IssueItem format
+  const issueItems: IssueItem[] = (issues || []).map(issue => {
     // Transform data to match getIssueIdFromIssue expectations
     const transformedIssue = {
       ...issue,
@@ -84,24 +70,18 @@ export default async function PageIssue() {
     };
 
     return {
-      type: 'room',
-      id: issue.liveblocks_room_id || `liveblocks:examples:nextjs-project-manager-${issue.workspace_slug}-${issue.issue_number}`,
+      issue: issue as IssueWithRelations,
       metadata: {
         issueId: getIssueIdFromIssue(transformedIssue),
-        title: issue.title,
-        progress: issue.status,
-        priority: issue.priority,
-        assignedTo: issue.assignee_ids?.join(',') || 'none',
+        title: issue.title || 'Untitled',
+        progress: (issue.status as any) || 'none',
+        priority: (issue.priority as any) || 'none',
+        assignedTo: issue.assignee_ids || [],
         labels: [],
         space: (issue.spaces as any)?.slug || 'general',
         project: issue.workspace_slug,
-      },
-      createdAt: issue.created_at,
-      lastConnectionAt: issue.updated_at,
-      usersAccesses: {},
-      groupsAccesses: {},
-      defaultAccesses: ['room:write']
-    } as RoomWithMetadata;
+      }
+    };
   })
   
   return (
@@ -111,7 +91,7 @@ export default async function PageIssue() {
         
         {/* Content */}
         <div>
-          <IssuesView initialRooms={issueRooms} />
+          <IssuesView initialIssues={issueItems} />
         </div>
       </main>
     </ResponsiveLayout>
