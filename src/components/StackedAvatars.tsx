@@ -1,7 +1,9 @@
-import { getUser } from "@/database";
+"use client";
+
+import { useUsers } from "./UserContext";
 
 interface StackedAvatarsProps {
-  assigneeIds: string[];
+  assigneeIds: string[] | string | null | undefined;
   maxVisible?: number;
   size?: "sm" | "md" | "lg";
 }
@@ -11,7 +13,15 @@ export function StackedAvatars({
   maxVisible = 3, 
   size = "md" 
 }: StackedAvatarsProps) {
-  if (!assigneeIds || assigneeIds.length === 0) {
+  const { getUserById, users, loading } = useUsers();
+  
+  // Ensure assigneeIds is always an array
+  const normalizedAssigneeIds = Array.isArray(assigneeIds) 
+    ? assigneeIds 
+    : (assigneeIds ? [String(assigneeIds)] : []);
+
+
+  if (!normalizedAssigneeIds || normalizedAssigneeIds.length === 0) {
     return (
       <div className={`rounded-full bg-neutral-200 border-2 border-white shadow-sm flex items-center justify-center ${getSizeClasses(size)}`}>
         <svg className={`text-neutral-400 ${getIconSizeClasses(size)}`} fill="currentColor" viewBox="0 0 20 20">
@@ -21,14 +31,31 @@ export function StackedAvatars({
     );
   }
 
-  const visibleAssignees = assigneeIds.slice(0, maxVisible);
-  const remainingCount = assigneeIds.length - maxVisible;
+  const visibleAssignees = normalizedAssigneeIds.slice(0, maxVisible);
+  const remainingCount = normalizedAssigneeIds.length - maxVisible;
 
   return (
     <div className="flex items-center">
       {visibleAssignees.map((assigneeId, index) => {
-        const user = getUser(assigneeId);
-        if (!user) return null;
+        const user = getUserById(assigneeId);
+        if (!user) {
+          // Fallback avatar for unknown users
+          return (
+            <div
+              key={assigneeId}
+              className={`relative rounded-full bg-neutral-300 border-2 border-white shadow-sm flex items-center justify-center ${getSizeClasses(size)}`}
+              style={{ 
+                marginLeft: index > 0 ? '-8px' : '0',
+                zIndex: visibleAssignees.length - index 
+              }}
+              title="Unknown User"
+            >
+              <svg className={`text-neutral-500 ${getIconSizeClasses(size)}`} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
+            </div>
+          );
+        }
 
         return (
           <div
@@ -38,12 +65,25 @@ export function StackedAvatars({
               marginLeft: index > 0 ? '-8px' : '0',
               zIndex: visibleAssignees.length - index 
             }}
-            title={user.info.name}
+            title={user.name}
           >
             <img
               className={`rounded-full border-2 border-white shadow-sm ${getSizeClasses(size)}`}
-              src={user.info.avatar}
-              alt={user.info.name}
+              src={user.avatar}
+              alt={user.name}
+              onError={(e) => {
+                // Fallback to initials if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  parent.innerHTML = `
+                    <div class="rounded-full border-2 border-white shadow-sm flex items-center justify-center ${getSizeClasses(size)} bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-xs">
+                      ${user.name.charAt(0).toUpperCase()}
+                    </div>
+                  `;
+                }
+              }}
             />
           </div>
         );

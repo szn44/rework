@@ -24,6 +24,9 @@ export async function updateSession(request: NextRequest) {
           )
         },
       },
+      realtime: {
+        enabled: false
+      }
     }
   )
 

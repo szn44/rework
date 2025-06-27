@@ -7,6 +7,7 @@ import { AISidebarProvider } from "@/components/AISidebarContext";
 import { AIToggleButton } from "@/components/AIToggleButton";
 import { ConditionalAIChat } from "@/components/ConditionalAIChat";
 import { NavigationProvider } from "@/components/NavigationContext";
+import { UserProvider } from "@/components/UserContext";
 import "../globals.css";
 import "../liveblocks.css";
 
@@ -42,10 +43,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="bg-neutral-200/50 text-neutral-900 antialiased h-full w-full overflow-hidden">
         <AISidebarProvider>
           <NavigationProvider>
-            <Providers>{children}</Providers>
+            <UserProvider>
+              <Providers>{children}</Providers>
 
-            {/* AI Chat Sidebar - Conditionally shown */}
-            <ConditionalAIChat />
+              {/* AI Chat Sidebar - Conditionally shown */}
+              <ConditionalAIChat />
+            </UserProvider>
           </NavigationProvider>
         </AISidebarProvider>
       </body>

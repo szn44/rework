@@ -21,6 +21,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useWorkspace } from "./WorkspaceContext";
 import { useSpace } from "./SpaceContext";
+import { useUsers } from "./UserContext";
+import { createClient } from "@/utils/supabase/client";
 
 export function ResizableNav() {
   const { isOpen, toggleInbox } = useInbox();
@@ -40,11 +42,57 @@ export function ResizableNav() {
   
   const { workspaces, currentWorkspace } = useWorkspace();
   const { spaces, currentSpace, setCurrentSpace } = useSpace();
+  const { users, getUserById, loading: usersLoading } = useUsers();
+  
+  // User profile state
+  const [userProfile, setUserProfile] = useState({
+    display_name: "",
+    avatar_url: "",
+    email: "",
+  });
 
   // Reset creating state on pathname change (in case it gets stuck)
   useEffect(() => {
     setCreating(false);
   }, [pathname]);
+
+  // Load user profile from auth
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) return;
+
+        // Try to get profile from user_profiles table
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("display_name, avatar_url, email")
+          .eq("user_id", user.id)
+          .single();
+
+        if (profile) {
+          setUserProfile({
+            display_name: profile.display_name || user.email?.split('@')[0] || "User",
+            avatar_url: profile.avatar_url || "",
+            email: user.email || "",
+          });
+        } else {
+          // Fallback to auth data
+          setUserProfile({
+            display_name: user.user_metadata?.name || user.email?.split('@')[0] || "User",
+            avatar_url: user.user_metadata?.avatar_url || "",
+            email: user.email || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -114,12 +162,7 @@ export function ResizableNav() {
     },
   ];
 
-  // Remove mock user data and get from auth context instead
-  const user = {
-    name: "User", // This should come from auth context
-    email: "user@example.com", // This should come from auth context  
-    avatar: "/api/placeholder/32/32", // This should come from auth context
-  };
+  // User data is now loaded from userProfile state
 
   // Update create issue handler to use workspace context
   const handleCreateIssue = async () => {
@@ -216,17 +259,33 @@ export function ResizableNav() {
 
   // Handle create space
   const handleCreateSpace = async () => {
+    console.log('handleCreateSpace called');
+    console.log('currentWorkspace:', currentWorkspace);
+    console.log('createSpaceForm:', createSpaceForm);
+
     if (!currentWorkspace) {
       console.error("No current workspace selected");
+      alert("No current workspace selected");
       return;
     }
 
     if (!createSpaceForm.name.trim()) {
       console.error("Space name is required");
+      alert("Space name is required");
       return;
     }
 
     try {
+      const slug = createSpaceForm.slug || createSpaceForm.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
+      console.log('Making API request with:', {
+        name: createSpaceForm.name.trim(),
+        slug: slug,
+        description: createSpaceForm.description.trim(),
+        color: createSpaceForm.color,
+        workspace_id: currentWorkspace.id,
+      });
+
       const response = await fetch('/api/spaces', {
         method: 'POST',
         headers: {
@@ -234,16 +293,19 @@ export function ResizableNav() {
         },
         body: JSON.stringify({
           name: createSpaceForm.name.trim(),
-          slug: createSpaceForm.slug || createSpaceForm.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+          slug: slug,
           description: createSpaceForm.description.trim(),
           color: createSpaceForm.color,
           workspace_id: currentWorkspace.id,
         }),
       });
 
+      console.log('API response status:', response.status);
+
       if (response.ok) {
         const result = await response.json();
-        console.log('Space created:', result);
+        console.log('Space created successfully:', result);
+        
         // Reset form
         setCreateSpaceForm({
           name: '',
@@ -252,14 +314,17 @@ export function ResizableNav() {
           color: '#3b82f6'
         });
         setShowCreateSpace(false);
+        
         // Refresh the page to show new space
         window.location.reload();
       } else {
         const error = await response.json();
-        console.error('Failed to create space:', error);
+        console.error('API error response:', error);
+        alert(`Failed to create space: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error creating space:', error);
+      console.error('Network error creating space:', error);
+      alert(`Network error: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -529,19 +594,27 @@ export function ResizableNav() {
               className="w-full flex items-center gap-2.5 p-3 text-gray-700 hover:bg-gray-100 transition-all duration-200 group"
             >
               <div className="relative">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs shadow-lg">
-                  JD
-                </div>
+                {userProfile.avatar_url ? (
+                  <img
+                    src={userProfile.avatar_url}
+                    alt="Profile"
+                    className="w-7 h-7 rounded-full object-cover shadow-lg"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs shadow-lg">
+                    {userProfile.display_name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors duration-200">
-                      {user.name}
+                      {userProfile.display_name || "User"}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
-                      {user.email}
+                      {userProfile.email}
                     </p>
                   </div>
                   <ChevronRightSmall className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors duration-200 flex-shrink-0" />

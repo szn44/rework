@@ -36,14 +36,13 @@ export function MultiAssigneeSelect({ value, onValueChange }: MultiAssigneeSelec
         
         const data = await response.json();
         
-        const usersList = data.users.map((u: any) => ({
+        const usersList = data.users ? data.users.map((u: any) => ({
           id: u.id,
           info: {
             name: u.name,
             avatar: u.avatar,
           },
-        }));
-
+        })) : [];
         setUsers(usersList);
       } catch (error) {
         console.error("Error loading users:", error);
