@@ -13,9 +13,12 @@ import "../globals.css";
 import "../liveblocks.css";
 
 export const metadata: Metadata = {
-  title: "Liveblocks",
+  title: "Rework",
   description:
-    "This example shows how to build a project manager using Liveblocks, and Next.js.",
+    "Modern project management and collaboration platform with AI-powered features.",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 const inter = Inter({
@@ -28,18 +31,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${inter.className} absolute inset-0`}>
       <head>
-        <link
-          href="https://liveblocks.io/favicon-32x32.png"
-          rel="icon"
-          sizes="32x32"
-          type="image/png"
-        />
-        <link
-          href="https://liveblocks.io/favicon-16x16.png"
-          rel="icon"
-          sizes="16x16"
-          type="image/png"
-        />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
       </head>
       <body className="bg-neutral-200/50 dark:bg-dark-bg-nav text-neutral-900 dark:text-dark-text-primary antialiased h-full w-full overflow-hidden transition-colors duration-200">
         <ThemeProvider>
