@@ -167,11 +167,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ space }, { status: 201 });
   } catch (error) {
     console.error("Error creating space (full error):", error);
-    console.error("Error stack:", error.stack);
+    if (error instanceof Error) {
+      console.error("Error stack:", error.stack);
+    }
     return NextResponse.json({ 
       error: "Internal server error", 
-      details: error.message,
-      code: error.code 
+      details: error instanceof Error ? error.message : 'Unknown error',
+      code: (error as any)?.code || 'UNKNOWN'
     }, { status: 500 });
   }
 } 

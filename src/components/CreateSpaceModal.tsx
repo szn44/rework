@@ -1,163 +1,268 @@
 "use client";
 
 import { useState } from "react";
-import { useWorkspace } from "./WorkspaceContext";
+import { createClient } from "@/utils/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { Button } from "@/components/ui/button";
+import { X, Hash, Lock, Globe } from "lucide-react";
 
 interface CreateSpaceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSpaceCreated?: () => void;
+  onSpaceCreated: (space: any) => void;
+  user: User;
+  workspaceId: string;
 }
 
-export function CreateSpaceModal({ isOpen, onClose, onSpaceCreated }: CreateSpaceModalProps) {
-  const { currentWorkspace } = useWorkspace();
+export function CreateSpaceModal({ 
+  isOpen, 
+  onClose, 
+  onSpaceCreated, 
+  user, 
+  workspaceId 
+}: CreateSpaceModalProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    isPrivate: false
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const supabase = createClient();
+
+  if (!isOpen) return null;
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .substring(0, 50);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!currentWorkspace) {
-      setError("No workspace selected");
+    if (!formData.name.trim()) {
+      setError("Space name is required");
       return;
     }
 
-    setIsSubmitting(true);
-    setError("");
-    
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const slug = formData.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const slug = generateSlug(formData.name);
       
-      const response = await fetch('/api/spaces', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          workspace_id: currentWorkspace.id,
+      // Check if slug already exists
+      const { data: existingSpace } = await supabase
+        .from("spaces")
+        .select("id")
+        .eq("slug", slug)
+        .eq("team_id", workspaceId)
+        .single();
+
+      if (existingSpace) {
+        setError("A space with this name already exists");
+        setIsLoading(false);
+        return;
+      }
+
+      // Create the space
+      const { data: newSpace, error: spaceError } = await supabase
+        .from("spaces")
+        .insert({
           name: formData.name.trim(),
           slug: slug,
-          description: formData.description.trim(),
-          color: '#' + Math.floor(Math.random()*16777215).toString(16) // Random color
-        }),
-      });
+          description: formData.description.trim() || null,
+          team_id: workspaceId,
+          created_by: user.id,
+          is_private: formData.isPrivate
+        })
+        .select()
+        .single();
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Space created successfully:', result);
-        
-        // Reset form
-        setFormData({ name: "", description: "" });
-        
-        // Call callback to refresh spaces
-        onSpaceCreated?.();
-        
-        // Close modal
-        onClose();
-      } else {
-        const error = await response.json();
-        console.error('Failed to create space:', error);
-        setError(error.error || 'Failed to create space');
+      if (spaceError) {
+        console.error("Error creating space:", spaceError);
+        setError("Failed to create space. Please try again.");
+        return;
       }
+
+      // Add creator as member
+      const { error: memberError } = await supabase
+        .from("space_members")
+        .insert({
+          space_id: newSpace.id,
+          user_id: user.id,
+          role: "admin"
+        });
+
+      if (memberError) {
+        console.error("Error adding space member:", memberError);
+        // Don't fail the creation, just log the error
+      }
+
+      onSpaceCreated(newSpace);
+      onClose();
+      
+      // Reset form
+      setFormData({
+        name: "",
+        description: "",
+        isPrivate: false
+      });
     } catch (error) {
-      console.error("Failed to create space:", error);
-      setError('Network error. Please try again.');
+      console.error("Error creating space:", error);
+      setError("An unexpected error occurred");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   const handleClose = () => {
-    if (!isSubmitting) {
-      setFormData({ name: "", description: "" });
-      setError("");
+    if (!isLoading) {
       onClose();
+      setError(null);
+      setFormData({
+        name: "",
+        description: "",
+        isPrivate: false
+      });
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between p-6 border-b border-neutral-200">
-          <h2 className="text-lg font-semibold text-neutral-900">Create New Space</h2>
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Create a space</h2>
           <button
             onClick={handleClose}
-            disabled={isSubmitting}
-            className="text-neutral-400 hover:text-neutral-600 transition-colors disabled:opacity-50"
+            disabled={isLoading}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            aria-label="Close modal"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Error message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
+          {/* Space name */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Space Name <span className="text-red-500">*</span>
+            <label htmlFor="spaceName" className="block text-sm font-medium text-gray-700 mb-2">
+              Space name
             </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter space name"
-              disabled={isSubmitting}
-              maxLength={50}
-            />
+            <div className="relative">
+              <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                id="spaceName"
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g. general, design, engineering"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                disabled={isLoading}
+                maxLength={50}
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Spaces are where your team communicates. They're best when organized around a topic — #marketing, for example.
+            </p>
           </div>
 
+          {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Description
+            <label htmlFor="spaceDescription" className="block text-sm font-medium text-gray-700 mb-2">
+              Description <span className="text-gray-400">(optional)</span>
             </label>
             <textarea
+              id="spaceDescription"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Enter space description (optional)"
-              disabled={isSubmitting}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="What's this space about?"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none"
               rows={3}
+              disabled={isLoading}
               maxLength={200}
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          {/* Privacy settings */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Privacy
+            </label>
+            <div className="space-y-3">
+              {/* Public option */}
+              <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="privacy"
+                  checked={!formData.isPrivate}
+                  onChange={() => setFormData(prev => ({ ...prev, isPrivate: false }))}
+                  className="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  disabled={isLoading}
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium text-gray-900">Public</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Anyone in your workspace can join and see all messages
+                  </p>
+                </div>
+              </label>
+
+              {/* Private option */}
+              <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="privacy"
+                  checked={formData.isPrivate}
+                  onChange={() => setFormData(prev => ({ ...prev, isPrivate: true }))}
+                  className="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  disabled={isLoading}
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium text-gray-900">Private</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Only invited members can join and see messages
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={handleClose}
-              disabled={isSubmitting}
-              className="flex-1 px-4 py-2 text-neutral-700 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
-            <button
+            <Button
               type="submit"
-              disabled={isSubmitting || !formData.name.trim()}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              disabled={isLoading || !formData.name.trim()}
+              className="bg-blue-600 hover:bg-blue-700"
             >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                'Create Space'
-              )}
-            </button>
+              {isLoading ? "Creating..." : "Create Space"}
+            </Button>
           </div>
         </form>
       </div>

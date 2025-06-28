@@ -23,25 +23,25 @@ import { useWorkspace } from "./WorkspaceContext";
 import { useSpace } from "./SpaceContext";
 import { useUsers } from "./UserContext";
 import { createClient } from "@/utils/supabase/client";
+import { CreateSpaceModal } from "./CreateSpaceModal";
+import { User } from "@supabase/supabase-js";
 
-export function ResizableNav() {
+interface ResizableNavProps {
+  user?: User;
+}
+
+export function ResizableNav({ user }: ResizableNavProps) {
   const { isOpen, toggleInbox } = useInbox();
   const pathname = usePathname();
   const [creating, setCreating] = useState(false);
-  const [showCreateSpace, setShowCreateSpace] = useState(false);
-  const [createSpaceForm, setCreateSpaceForm] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    color: '#3b82f6'
-  });
+  const [showCreateSpaceModal, setShowCreateSpaceModal] = useState(false);
   const [width, setWidth] = useState(240);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
   
   const { workspaces, currentWorkspace } = useWorkspace();
-  const { spaces, currentSpace, setCurrentSpace } = useSpace();
+  const { spaces, currentSpace, setCurrentSpace, refreshSpaces } = useSpace();
   const { users, getUserById, loading: usersLoading } = useUsers();
   
   // User profile state
@@ -61,29 +61,30 @@ export function ResizableNav() {
     const loadUserProfile = async () => {
       try {
         const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
         
-        if (!user) return;
+        const currentUser = user || authUser;
+        if (!currentUser) return;
 
         // Try to get profile from user_profiles table
         const { data: profile } = await supabase
           .from("user_profiles")
           .select("display_name, avatar_url, email")
-          .eq("user_id", user.id)
+          .eq("user_id", currentUser.id)
           .single();
 
         if (profile) {
           setUserProfile({
-            display_name: profile.display_name || user.email?.split('@')[0] || "User",
+            display_name: profile.display_name || currentUser.email?.split('@')[0] || "User",
             avatar_url: profile.avatar_url || "",
-            email: user.email || "",
+            email: currentUser.email || "",
           });
         } else {
           // Fallback to auth data
           setUserProfile({
-            display_name: user.user_metadata?.name || user.email?.split('@')[0] || "User",
-            avatar_url: user.user_metadata?.avatar_url || "",
-            email: user.email || "",
+            display_name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || "User",
+            avatar_url: currentUser.user_metadata?.avatar_url || "",
+            email: currentUser.email || "",
           });
         }
       } catch (error) {
@@ -92,7 +93,7 @@ export function ResizableNav() {
     };
 
     loadUserProfile();
-  }, []);
+  }, [user]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -147,14 +148,11 @@ export function ResizableNav() {
   ];
 
   const spacesItems = spaces.map(space => ({
-    href: `/spaces/${space.slug}`,
+    href: `/spaces/${space.slug}/chat`,
     label: space.name,
     color: space.color,
-    isActive: pathname.startsWith(`/spaces/${space.slug}`),
+    isActive: pathname.startsWith(`/spaces/${space.slug}/chat`),
   }));
-
-
-  // User data is now loaded from userProfile state
 
   // Update create issue handler to use workspace context
   const handleCreateIssue = async () => {
@@ -196,7 +194,7 @@ export function ResizableNav() {
           }
         } else {
           const error = await response.json();
-          console.error('Failed to create issue:', error);
+          console.error('Failed to create issue:', (error as any));
         }
       } catch (error) {
         console.error("Failed to create issue:", error);
@@ -240,7 +238,7 @@ export function ResizableNav() {
         }
       } else {
         const error = await response.json();
-        console.error('Failed to create issue:', error);
+        console.error('Failed to create issue:', (error as any));
       }
     } catch (error) {
       console.error("Failed to create issue:", error);
@@ -249,109 +247,12 @@ export function ResizableNav() {
     }
   };
 
-  // Handle create space
-  const handleCreateSpace = async () => {
-    console.log('handleCreateSpace called');
-    console.log('currentWorkspace:', currentWorkspace);
-    console.log('createSpaceForm:', createSpaceForm);
-
-    if (!currentWorkspace) {
-      console.error("No current workspace selected");
-      alert("No current workspace selected. Please ensure you're logged in and part of a workspace.");
-      return;
-    }
-
-    if (!createSpaceForm.name.trim()) {
-      console.error("Space name is required");
-      alert("Space name is required");
-      return;
-    }
-
-    try {
-      // Generate slug: lowercase, replace spaces with hyphens, remove invalid chars
-      let slug = createSpaceForm.slug || createSpaceForm.name.toLowerCase()
-        .trim()                         // Remove leading/trailing spaces
-        .replace(/\s+/g, '-')           // Replace spaces with hyphens
-        .replace(/[^a-z0-9-]/g, '')     // Remove any chars that aren't a-z, 0-9, or -
-        .replace(/-+/g, '-')            // Replace multiple hyphens with single hyphen
-        .replace(/^-|-$/g, '');         // Remove leading/trailing hyphens
-      
-      // Ensure slug is not empty
-      if (slug.length === 0) {
-        slug = 'space'; // Default fallback
-      }
-      
-      // Ensure slug is not longer than 40 characters
-      if (slug.length > 40) {
-        slug = slug.substring(0, 40).replace(/-$/, ''); // Trim and remove trailing hyphen
-      }
-      
-      console.log('Generated slug:', slug);
-      
-      // Validate slug format (1-40 chars, no leading/trailing hyphens)
-      if (!/^[a-z0-9-]{1,40}$/.test(slug) || slug.startsWith('-') || slug.endsWith('-')) {
-        alert(`Invalid slug generated: "${slug}". Please use a different name with only letters, numbers, and spaces.`);
-        return;
-      }
-      
-      console.log('Making API request with:', {
-        name: createSpaceForm.name.trim(),
-        slug: slug,
-        description: createSpaceForm.description.trim(),
-        color: createSpaceForm.color,
-        workspace_id: currentWorkspace.id,
-      });
-
-      const response = await fetch('/api/spaces', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: createSpaceForm.name.trim(),
-          slug: slug,
-          description: createSpaceForm.description.trim(),
-          color: createSpaceForm.color,
-          workspace_id: currentWorkspace.id,
-        }),
-      });
-
-      console.log('API response status:', response.status);
-      
-      // Get response text first to debug
-      const responseText = await response.text();
-      console.log('Raw API response:', responseText);
-
-      if (response.ok) {
-        const result = JSON.parse(responseText);
-        console.log('Space created successfully:', result);
-        
-        // Reset form
-        setCreateSpaceForm({
-          name: '',
-          slug: '',
-          description: '',
-          color: '#3b82f6'
-        });
-        setShowCreateSpace(false);
-        
-        // Refresh the page to show new space
-        window.location.reload();
-      } else {
-        let errorMessage = 'Unknown error';
-        try {
-          const error = JSON.parse(responseText);
-          errorMessage = error.error || error.message || 'Unknown error';
-        } catch (e) {
-          errorMessage = responseText || 'Unknown error';
-        }
-        console.error('API error response:', errorMessage);
-        alert(`Failed to create space: ${errorMessage}`);
-      }
-    } catch (error) {
-      console.error('Network error creating space:', error);
-      alert(`Network error: ${error.message || 'Unknown error'}`);
-    }
+  // Handle space created callback
+  const handleSpaceCreated = (newSpace: any) => {
+    // Refresh spaces list
+    refreshSpaces?.();
+    // Navigate to the new space
+    window.location.href = `/spaces/${newSpace.slug}/chat`;
   };
 
   return (
@@ -366,64 +267,25 @@ export function ResizableNav() {
       )}
       
       {/* Create Space Modal */}
-      {showCreateSpace && (
-        <div className="inset-0 bg-black/50 backdrop-blur-sm fixed z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-6 shadow-2xl border border-gray-200 w-96">
-            <h2 className="text-lg font-semibold mb-4">Create New Space</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={createSpaceForm.name}
-                  onChange={(e) => setCreateSpaceForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Space name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description (optional)
-                </label>
-                <input
-                  type="text"
-                  value={createSpaceForm.description}
-                  onChange={(e) => setCreateSpaceForm(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Space description"
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowCreateSpace(false)}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateSpace}
-                  disabled={!createSpaceForm.name.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Create
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {currentWorkspace && user && (
+        <CreateSpaceModal
+          isOpen={showCreateSpaceModal}
+          onClose={() => setShowCreateSpaceModal(false)}
+          onSpaceCreated={handleSpaceCreated}
+          user={user}
+          workspaceId={currentWorkspace.id}
+        />
       )}
       
       <div
         ref={navRef}
         className={classNames(
-          "relative h-full transition-all duration-300 ease-out flex flex-col",
+          "relative h-full transition-all duration-300 ease-out flex flex-col bg-gray-50 dark:bg-dark-bg-secondary",
           {
             "shadow-sm shadow-gray-300/20": isResizing,
           }
         )}
-        style={{ width: `${width}px`, backgroundColor: '#F8F8F8' }}
+        style={{ width: `${width}px` }}
       >
         {/* Header */}
         <div className="p-3">
@@ -437,7 +299,7 @@ export function ResizableNav() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 -z-10 blur-sm" />
               </div>
-              <span className="text-gray-900 font-bold text-base tracking-tight group-hover:text-blue-600 transition-colors duration-300 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text">
+              <span className="text-gray-900 dark:text-dark-text-primary font-bold text-base tracking-tight group-hover:text-blue-600 transition-colors duration-300 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text">
               
               </span>
             </Link>
@@ -460,167 +322,138 @@ export function ResizableNav() {
         </div>
 
         {/* Main Navigation Items */}
-        <div className="flex-1 px-3 pt-1 pb-2 space-y-0.5 overflow-y-auto">
-          {/* Inbox and Issues */}
-          {mainNavItems.map((item) => {
-            const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-            const ItemIcon = item.icon;
-            
-            if (item.isSpecial && pathname.startsWith("/issue/")) {
-              // Special inbox behavior for issue pages
+        <div className="flex-1 px-2 pt-2 pb-2 space-y-0.5 overflow-y-auto border-r border-gray-200 dark:border-dark-bg-tertiary">
+          {/* Top Nav: Inbox, Issues, Agents */}
+          <div className="mb-4">
+            {mainNavItems.map((item) => {
+              const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              const ItemIcon = item.icon;
               return (
-                <button
+                <Link
                   key={item.href}
-                  onClick={toggleInbox}
+                  href={item.href}
                   className={classNames(
-                    "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group relative overflow-hidden",
-                    isOpen
-                      ? "bg-gray-800 text-white"
-                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition group mb-1",
+                    isActive
+                      ? "bg-[#0F0F0F] dark:bg-dark-bg-tertiary text-white dark:text-dark-text-primary rounded-lg"
+                      : "text-gray-700 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
                   )}
                 >
-                  <div className="relative">
-                    <ItemIcon className={classNames(
-                      "transition-all duration-200 w-4 h-4",
-                      isOpen ? "text-white" : "text-gray-500 group-hover:text-gray-700"
-                    )} />
-                  </div>
-                  <span className="truncate transition-colors duration-200">{item.label}</span>
-                </button>
+                  <ItemIcon className={classNames("w-5 h-5", isActive ? "text-gray-400" : "text-gray-400 group-hover:text-gray-400")}/>
+                  <span className="truncate">{item.label}</span>
+                </Link>
               );
-            }
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={classNames(
-                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group relative overflow-hidden",
-                  isActive
-                    ? "bg-gray-800 text-white"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                )}
-              >
-                <div className="relative">
-                  <ItemIcon className={classNames(
-                    "transition-all duration-200 w-4 h-4",
-                    isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700"
-                  )} />
-                </div>
-                <span className="truncate transition-colors duration-200">{item.label}</span>
-              </Link>
-            );
-          })}
-
-          {/* Agents - now an active link */}
-          <Link
-            href="/agents"
-            className={classNames(
-              "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group relative overflow-hidden mb-4",
-              pathname.startsWith("/agents")
-                ? "bg-gray-800 text-white"
-                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-            )}
-          >
-            <div className="w-4 h-4 flex items-center justify-center">
-              <svg data-testid="geist-icon" height="16" strokeLinejoin="round" viewBox="0 0 16 16" width="16" style={{color: 'currentcolor'}}>
-                <path d="M2.5 0.5V0H3.5V0.5C3.5 1.60457 4.39543 2.5 5.5 2.5H6V3V3.5H5.5C4.39543 3.5 3.5 4.39543 3.5 5.5V6H3H2.5V5.5C2.5 4.39543 1.60457 3.5 0.5 3.5H0V3V2.5H0.5C1.60457 2.5 2.5 1.60457 2.5 0.5Z" fill="currentColor"></path>
-                <path d="M14.5 4.5V5H13.5V4.5C13.5 3.94772 13.0523 3.5 12.5 3.5H12V3V2.5H12.5C13.0523 2.5 13.5 2.05228 13.5 1.5V1H14H14.5V1.5C14.5 2.05228 14.9477 2.5 15.5 2.5H16V3V3.5H15.5C14.9477 3.5 14.5 3.94772 14.5 4.5Z" fill="currentColor"></path>
-                <path d="M8.40706 4.92939L8.5 4H9.5L9.59294 4.92939C9.82973 7.29734 11.7027 9.17027 14.0706 9.40706L15 9.5V10.5L14.0706 10.5929C11.7027 10.8297 9.82973 12.7027 9.59294 15.0706L9.5 16H8.5L8.40706 15.0706C8.17027 12.7027 6.29734 10.8297 3.92939 10.5929L3 10.5V9.5L3.92939 9.40706C6.29734 9.17027 8.17027 7.29734 8.40706 4.92939Z" fill="currentColor"></path>
-              </svg>
-            </div>
-            <span className="truncate">Agents</span>
-          </Link>
-
-          {/* Spaces Section with enhanced hover states */}
-          <div className="mt-6 mb-2">
-            <div className="text-sm font-medium text-gray-500 tracking-wide px-3 mb-3 mt-3 flex items-center justify-between">
-              <span>Spaces</span>
-              <button 
-                onClick={() => setShowCreateSpace(true)}
-                className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 w-6 h-6 flex items-center justify-center rounded transition-colors duration-200"
-              >
-                <PlusIcon className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            
-            {spacesItems.map((space) => (
-              <Link
-                key={space.href}
-                href={space.href}
-                className={classNames(
-                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group relative overflow-hidden",
-                  space.isActive
-                    ? "bg-gray-800 text-white"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                )}
-              >
-                <span className={classNames(
-                  "transition-colors duration-200",
-                  space.isActive ? "text-gray-300" : "text-gray-500 group-hover:text-gray-700"
-                )}>#</span>
-                <span className="truncate transition-colors duration-200">{space.label}</span>
-              </Link>
-            ))}
-          </div>
-
-        </div>
-
-        {/* Bottom Section - Settings */}
-        <div className="border-t border-gray-200/60 bg-gray-50/30">
-          <div className="px-3 pt-2 pb-1">
+            })}
+            {/* Agents link */}
             <Link
-              href="/settings"
+              href="/agents"
               className={classNames(
-                "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group relative overflow-hidden",
-                pathname.startsWith("/settings")
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition group mb-1",
+                pathname.startsWith("/agents")
+                  ? "bg-[#0F0F0F] dark:bg-dark-bg-tertiary text-white dark:text-dark-text-primary"
+                  : "text-gray-700 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
               )}
             >
-              <Cog6ToothIcon className={classNames(
-                "transition-all duration-200 w-4 h-4",
-                pathname.startsWith("/settings") ? "text-white" : "text-gray-500 group-hover:text-gray-700"
-              )} />
-              <span className="truncate transition-colors duration-200">Settings</span>
+              <svg data-testid="geist-icon" height="20" width="20" viewBox="0 0 16 16" fill="none" style={{ color: 'currentColor' }} className="w-5 h-5 text-gray-400 group-hover:text-gray-400">
+                <path fillRule="evenodd" clipRule="evenodd" d="M7.15714 0L2.33264 9.40776L1.77252 10.5H3.00001H7.00001C7.13808 10.5 7.25001 10.6119 7.25001 10.75V16H8.84288L13.6674 6.59224L14.2275 5.5H13H9.00001C8.86194 5.5 8.75001 5.38807 8.75001 5.25V0H7.15714ZM7.00001 9H4.22749L7.25001 3.1061V5.25C7.25001 6.2165 8.03351 7 9.00001 7H11.7725L8.75001 12.8939V10.75C8.75001 9.7835 7.96651 9 7.00001 9Z" fill="currentColor"></path>
+              </svg>
+              <span className="truncate">Agents</span>
             </Link>
           </div>
 
-          {/* User Profile */}
-          <div className="border-t border-gray-200/60 bg-gray-100/40">
-            <Link
-              href="/profile"
-              className="w-full flex items-center gap-2.5 p-3 text-gray-700 hover:bg-gray-100 transition-all duration-200 group"
-            >
-              <div className="relative">
-                {userProfile.avatar_url ? (
-                  <img
-                    src={userProfile.avatar_url}
-                    alt="Profile"
-                    className="w-7 h-7 rounded-full object-cover shadow-lg"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs shadow-lg">
-                    {userProfile.display_name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors duration-200">
-                      {userProfile.display_name || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {userProfile.email}
-                    </p>
-                  </div>
-                  <ChevronRightSmall className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors duration-200 flex-shrink-0" />
+          {/* Channels Section */}
+          <div className="mb-1">
+            <div className="flex items-center justify-between px-4 mb-1 mt-2">
+              <span className="text-xs font-semibold text-gray-500 dark:text-dark-text-tertiary uppercase tracking-wider">Spaces</span>
+              <button 
+                onClick={() => setShowCreateSpaceModal(true)}
+                                  className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-dark-bg-tertiary transition" 
+                title="Create new space"
+              >
+                <PlusIcon className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+            <div>
+              {spacesItems.map((space) => (
+                <Link
+                  key={space.href}
+                  href={space.href}
+                  className={classNames(
+                    "flex items-center gap-2 px-4 py-1 rounded-lg text-sm font-medium transition group",
+                    space.isActive
+                      ? "bg-[#0F0F0F] dark:bg-dark-bg-tertiary text-white dark:text-dark-text-primary"
+                      : "text-gray-700 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
+                  )}
+                >
+                  <span className="text-lg text-gray-400">#</span>
+                  <span className="truncate">{space.label}</span>
+                  
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Direct Messages Section */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between px-4 mb-1 mt-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Direct messages</span>
+              <button className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 transition" title="Add DM">
+                <PlusIcon className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+            <div className="space-y-1">
+              {/* Example DMs, replace with real data if available */}
+              <Link href="#" className="flex items-center gap-1 px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition">
+                <span className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">P</span>
+                <span className="truncate">Patrick</span>
+              </Link>
+              <Link href="#" className="flex items-center gap-1 px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition">
+                <span className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">C</span>
+                <span className="truncate">Caroline</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* User Profile */}
+        <div className="border-t border-gray-200/60 bg-gray-100/40">
+          <Link
+            href="/settings"
+            className={classNames(
+              "w-full flex items-center gap-2.5 p-3 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-[#0F0F0F] transition-all duration-200 group cursor-pointer",
+              pathname.startsWith("/settings") ? "bg-[#0F0F0F] text-white" : ""
+            )}
+          >
+            <div className="relative">
+              {userProfile.avatar_url ? (
+                <img
+                  src={userProfile.avatar_url}
+                  alt="Profile"
+                  className="w-7 h-7 rounded-full object-cover shadow-lg"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs shadow-lg">
+                  {userProfile.display_name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className={classNames(
+                    "text-sm font-semibold truncate transition-colors duration-200",
+                    pathname.startsWith("/settings") ? "text-white" : "text-gray-900 group-hover:text-[#0F0F0F]"
+                  )}>
+                    {userProfile.display_name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {userProfile.email}
+                  </p>
                 </div>
               </div>
-            </Link>
-          </div>
+            </div>
+          </Link>
         </div>
 
         {/* Resize Handle */}
@@ -640,6 +473,4 @@ export function ResizableNav() {
       </div>
     </>
   );
-}
-
-// Badge functions removed to prevent Liveblocks connections 
+} 

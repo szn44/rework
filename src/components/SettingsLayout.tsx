@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import classNames from "classnames";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 import {
   UserIcon,
   CreditCardIcon,
@@ -503,16 +504,16 @@ export function SettingsLayout() {
   const renderAccountSection = () => (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Account</h2>
-        <p className="text-sm text-gray-600">Manage your personal account settings and preferences.</p>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-2">Account</h2>
+        <p className="text-sm text-gray-600 dark:text-dark-text-secondary">Manage your personal account settings and preferences.</p>
       </div>
 
       {/* Profile Section */}
-      <div className="bg-white max-w-[600px] border border-gray-200 rounded-xl p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">Profile Information</h3>
+      <div className="bg-white dark:bg-dark-bg-secondary max-w-[600px] border border-gray-200 dark:border-dark-bg-tertiary rounded-xl p-6 shadow-sm">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-dark-text-primary mb-4">Profile Information</h3>
         {profile.loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="text-sm text-gray-500">Loading profile...</div>
+            <div className="text-sm text-gray-500 dark:text-dark-text-secondary">Loading profile...</div>
           </div>
         ) : (
           <div className="flex items-start gap-6">
@@ -545,28 +546,28 @@ export function SettingsLayout() {
             </div>
             <div className="flex-1 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-2">Display Name</label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-dark-text-secondary mb-2">Display Name</label>
                 <input
                   type="text"
                   value={profile.display_name}
                   onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
-                  className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm"
+                  className="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary dark:bg-dark-bg-primary dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm"
                   placeholder="Enter your display name"
                   maxLength={50}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
                   This name will appear in assignment dropdowns and issue cards
                 </p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-2">Email</label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-dark-text-secondary mb-2">Email</label>
                 <input
                   type="email"
                   value={profile.email}
                   disabled
-                  className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed text-sm"
+                  className="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary rounded-lg bg-gray-50 dark:bg-dark-bg-tertiary text-gray-500 dark:text-dark-text-tertiary cursor-not-allowed text-sm"
                 />
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">Email cannot be changed</p>
               </div>
               
               {message && (
@@ -601,33 +602,47 @@ export function SettingsLayout() {
 
 
       {/* Password Section */}
-      <div className="bg-white max-w-[600px] border border-gray-200 rounded-xl p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">Change Password</h3>
+      <div className="bg-white dark:bg-dark-bg-secondary max-w-[600px] border border-gray-200 dark:border-dark-bg-tertiary rounded-xl p-6 shadow-sm">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-dark-text-primary mb-4">Change Password</h3>
         <div className="space-y-4 max-w-md">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-2">Current Password</label>
+            <label className="block text-xs font-medium text-gray-700 dark:text-dark-text-secondary mb-2">Current Password</label>
             <input
               type="password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary dark:bg-dark-bg-primary dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-2">New Password</label>
+            <label className="block text-xs font-medium text-gray-700 dark:text-dark-text-secondary mb-2">New Password</label>
             <input
               type="password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary dark:bg-dark-bg-primary dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-2">Confirm New Password</label>
+            <label className="block text-xs font-medium text-gray-700 dark:text-dark-text-secondary mb-2">Confirm New Password</label>
             <input
               type="password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary dark:bg-dark-bg-primary dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm"
             />
           </div>
           <button className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors duration-200">
             Update Password
           </button>
+        </div>
+      </div>
+
+      {/* Appearance Section */}
+      <div className="bg-white dark:bg-dark-bg-secondary max-w-[600px] border border-gray-200 dark:border-dark-bg-tertiary rounded-xl p-6 shadow-sm">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-dark-text-primary mb-4">Appearance</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-dark-text-secondary mb-3">Theme Preference</label>
+            <ThemeSwitcher />
+            <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-2">
+              Choose your preferred theme for the application interface
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -959,9 +974,9 @@ export function SettingsLayout() {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full bg-white dark:bg-dark-bg-primary">
       {/* Sidebar */}
-      <div className="w-64 p-6">
+      <div className="w-64 p-6 border-r border-gray-200 dark:border-dark-bg-tertiary">
         <div className="space-y-1">
           {settingsTabs.map((tab) => (
             <button
@@ -970,8 +985,8 @@ export function SettingsLayout() {
               className={classNames(
                 "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-sm transition-all duration-200",
                 activeSection === tab.id
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-gray-800 dark:bg-dark-bg-tertiary text-white dark:text-dark-text-primary"
+                  : "text-gray-700 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-bg-secondary hover:text-gray-900 dark:hover:text-dark-text-primary"
               )}
             >
               <tab.icon className="w-4 h-4" />
@@ -982,7 +997,7 @@ export function SettingsLayout() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8 overflow-y-auto">
+      <div className="flex-1 p-8 overflow-y-auto bg-gray-50 dark:bg-dark-bg-primary">
         {renderContent()}
       </div>
     </div>

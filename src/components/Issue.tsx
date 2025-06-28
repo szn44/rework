@@ -54,16 +54,16 @@ export function Issue({ issueId }: { issueId: string }) {
     try {
       // Simple markdown conversion for display
       const markdown = issue.content_text
-        .replace(/\n{2,}/g, (match) => "<p><br></p>".repeat(match.length - 1))
+        .replace(/\n{2,}/g, (match: string) => "<p><br></p>".repeat(match.length - 1))
         .replace(/\n(?!$)/g, "\n\n")
-        .replace(/(\n+)$/g, (match) => "<p><br></p>".repeat(match.length));
+        .replace(/(\n+)$/g, (match: string) => "<p><br></p>".repeat(match.length));
 
       const sanitized = sanitizeHtml(markdown, {
         allowedTags: ["p", "br"],
         disallowedTagsMode: "escape",
       });
 
-      return marked(sanitized);
+      return marked(sanitized) as string;
     } catch (err) {
       return "<p></p>";
     }

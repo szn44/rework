@@ -30,7 +30,7 @@ export function FixMembershipButton() {
         setResult(`❌ Error: ${data.error}`);
       }
     } catch (error) {
-      setResult(`❌ Network error: ${error.message}`);
+      setResult(`❌ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }

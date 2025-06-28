@@ -26,7 +26,7 @@ export function DebugWorkspaceUsers() {
       }
     } catch (err) {
       console.error("Network error:", err);
-      setError(`Network error: ${err.message}`);
+      setError(`Network error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export function DebugWorkspaceUsers() {
       }
     } catch (err) {
       console.error("Debug network error:", err);
-      setError(`Debug network error: ${err.message}`);
+      setError(`Debug network error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }

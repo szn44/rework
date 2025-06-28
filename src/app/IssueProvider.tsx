@@ -156,7 +156,7 @@ export function IssueProvider({ children, issueId }: IssueProviderProps) {
 
     try {
       // Optimistic update
-      setIssue(prev => prev ? { ...prev, ...updates } : null);
+      setIssue((prev: any) => prev ? { ...prev, ...updates } : null);
 
       const { error } = await supabase
         .from("issues")

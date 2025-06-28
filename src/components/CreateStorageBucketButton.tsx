@@ -32,7 +32,7 @@ export function CreateStorageBucketButton() {
       }
 
     } catch (error) {
-      setResult(`❌ Network error: ${error.message}`);
+      setResult(`❌ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setCreating(false);
     }

@@ -116,7 +116,7 @@ export async function getRoomsFromIds(roomIds: string[]) {
     promises.push(liveblocks.getRoom(roomId));
   }
 
-  return (await Promise.all(promises)) as RoomWithMetadata[];
+  return (await Promise.all(promises)) as unknown as RoomWithMetadata[];
 }
 
 export async function deleteRoom(roomId: string) {

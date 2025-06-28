@@ -47,14 +47,15 @@ export async function updateSession(request: NextRequest) {
   // 3. Change the myNewResponse object as you want, but avoid changing
   //    the cookies!
 
-  // Optionally, redirect to login page for unauthenticated users on protected routes
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/api/auth')
-  ) {
-    // Redirect to login page
+  // Define public routes that don't require authentication
+  const publicRoutes = ['/login', '/auth', '/api/auth']
+  const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  )
+
+  // Redirect unauthenticated users to login page
+  if (!user && !isPublicRoute) {
+    console.log(`Redirecting unauthenticated user from ${request.nextUrl.pathname} to /login`)
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

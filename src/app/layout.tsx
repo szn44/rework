@@ -8,6 +8,7 @@ import { AIToggleButton } from "@/components/AIToggleButton";
 import { ConditionalAIChat } from "@/components/ConditionalAIChat";
 import { NavigationProvider } from "@/components/NavigationContext";
 import { UserProvider } from "@/components/UserContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "../globals.css";
 import "../liveblocks.css";
 
@@ -40,17 +41,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           type="image/png"
         />
       </head>
-      <body className="bg-neutral-200/50 text-neutral-900 antialiased h-full w-full overflow-hidden">
-        <AISidebarProvider>
-          <NavigationProvider>
-            <UserProvider>
-              <Providers>{children}</Providers>
+      <body className="bg-neutral-200/50 dark:bg-dark-bg-primary text-neutral-900 dark:text-dark-text-primary antialiased h-full w-full overflow-hidden transition-colors duration-200">
+        <ThemeProvider>
+          <AISidebarProvider>
+            <NavigationProvider>
+              <UserProvider>
+                <Providers>{children}</Providers>
 
-              {/* AI Chat Sidebar - Conditionally shown */}
-              <ConditionalAIChat />
-            </UserProvider>
-          </NavigationProvider>
-        </AISidebarProvider>
+                {/* AI Chat Sidebar - Conditionally shown */}
+                <ConditionalAIChat />
+              </UserProvider>
+            </NavigationProvider>
+          </AISidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

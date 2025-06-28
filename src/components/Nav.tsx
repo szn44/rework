@@ -15,17 +15,37 @@ import { ProgressInProgressIcon } from "@/icons/ProgressInProgressIcon";
 import { MyIssuesIcon } from "@/icons/MyIssuesIcon";
 import { WikiIcon } from "@/icons/WikiIcon";
 import { ProjectsIcon } from "@/icons/ProjectsIcon";
-import { Bot, User, Settings as SettingsIcon } from "lucide-react";
+import { Bot, User as UserIcon, Settings as SettingsIcon } from "lucide-react";
+import { User } from "@supabase/supabase-js";
+import { createClient } from "@/utils/supabase/client";
 import { CreateSpaceModal } from "./CreateSpaceModal";
+import { 
+  Hash, 
+  Plus, 
+  Lock,
+  MessageSquare,
+  Inbox,
+  FileText,
+  Users,
+  ChevronDown,
+  ChevronRight
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Space {
   id: string;
   name: string;
   slug: string;
-  color: string;
+  description?: string;
+  is_private: boolean;
+  unread_count?: number;
 }
 
-export function Nav() {
+interface NavProps {
+  user: User;
+}
+
+export function Nav({ user }: NavProps) {
   const { isOpen, toggleInbox } = useInbox();
   const pathname = usePathname();
   const router = useRouter();
@@ -35,6 +55,9 @@ export function Nav() {
   const [showCreateSpaceModal, setShowCreateSpaceModal] = useState(false);
   const { currentWorkspace } = useWorkspace();
   const { currentSpace } = useSpace();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSpacesExpanded, setIsSpacesExpanded] = useState(true);
+  const supabase = createClient();
 
   // Load spaces for current workspace
   useEffect(() => {
@@ -127,6 +150,60 @@ export function Nav() {
     }
   };
 
+  const fetchSpaces = async () => {
+    if (!currentWorkspace?.id) return;
+
+    try {
+      setLoadingSpaces(true);
+      const { data, error } = await supabase
+        .from("spaces")
+        .select("id, name, slug, description, is_private")
+        .eq("team_id", currentWorkspace.id)
+        .order("name", { ascending: true });
+
+      if (!error && data) {
+        setSpaces(data);
+      } else {
+        console.error("Error fetching spaces:", error);
+      }
+    } catch (error) {
+      console.error("Error fetching spaces:", error);
+    } finally {
+      setLoadingSpaces(false);
+    }
+  };
+
+  const isActiveLink = (href: string) => {
+    return pathname === href || pathname.startsWith(href + "/");
+  };
+
+  const navItems = [
+    {
+      href: "/inbox",
+      icon: Inbox,
+      label: "Inbox",
+      badge: null
+    },
+    {
+      href: "/dashboard",
+      icon: MessageSquare,
+      label: "Dashboard",
+      badge: null
+    },
+    {
+      href: "/wiki",
+      icon: FileText,
+      label: "Wiki",
+      badge: null
+    },
+    {
+      href: "/agents",
+      icon: Users,
+      label: "Agents",
+      badge: null
+    }
+  ];
+
   return (
     <div className="relative h-full">
       {creating ? (
@@ -212,53 +289,98 @@ export function Nav() {
       </div>
 
       {/* Spaces Section */}
-      <div className="mt-6 mb-2">
-        <div className="text-xs font-medium text-neutral-500 uppercase tracking-wide px-2 mb-3 flex items-center justify-between">
-          <span>Spaces</span>
-          <button 
-            onClick={handleCreateSpace}
-            className="text-neutral-400 hover:text-neutral-600 w-4 h-4 flex items-center justify-center text-base transition-colors"
+      <div className="mt-6">
+        <div className="px-4 mb-2">
+          <button
+            onClick={() => setIsSpacesExpanded(!isSpacesExpanded)}
+            className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700 transition-colors w-full"
           >
-            +
+            {isSpacesExpanded ? (
+              <ChevronDown className="w-3 h-3" />
+            ) : (
+              <ChevronRight className="w-3 h-3" />
+            )}
+            Spaces
+            <span className="ml-auto text-gray-400">
+              {spaces.length}
+            </span>
           </button>
         </div>
-        
-        {loadingSpaces ? (
-          <div className="text-sm text-neutral-500 p-2">Loading spaces...</div>
-        ) : spaces.length > 0 ? (
-          spaces.map((space) => (
-            <Link key={space.id} href={`/spaces/${space.slug}`}>
-              <div
-                className={classNames(
-                  "flex items-center justify-between gap-2 w-full text-sm font-medium p-2 rounded-lg text-left transition-colors",
-                  { 
-                    "bg-neutral-800 text-white": pathname === `/spaces/${space.slug}` || (pathname === "/wiki" && space.slug === "all-rework"),
-                    "text-neutral-700 hover:bg-neutral-100": !(pathname === `/spaces/${space.slug}` || (pathname === "/wiki" && space.slug === "all-rework"))
-                  }
-                )}
-              >
-                <span className="flex items-center gap-2">
-                  <div 
-                    className="w-2 h-2 rounded-full" 
-                    style={{ backgroundColor: space.color }}
-                  />
-                  {space.name}
-                </span>
+
+        {isSpacesExpanded && (
+          <div className="px-2 space-y-1">
+            {/* Create Space Button */}
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors w-full"
+            >
+              <Plus className="w-4 h-4 flex-shrink-0" />
+              <span className="flex-1 text-left">Create space</span>
+            </button>
+
+            {/* Loading State */}
+            {loadingSpaces && (
+              <div className="px-3 py-2 text-sm text-gray-500">
+                Loading spaces...
               </div>
-            </Link>
-          ))
-        ) : (
-          <div className="text-sm text-neutral-500 p-2 italic">No spaces yet</div>
+            )}
+
+            {/* Spaces List */}
+            {!loadingSpaces && spaces.map((space) => {
+              const spaceHref = `/spaces/${space.slug}`;
+              const active = isActiveLink(spaceHref);
+              
+              return (
+                <Link
+                  key={space.id}
+                  href={spaceHref}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors group",
+                    active
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  )}
+                >
+                  {space.is_private ? (
+                    <Lock className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                  ) : (
+                    <Hash className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                  )}
+                  <span className="flex-1 truncate">{space.name}</span>
+                  {space.unread_count && space.unread_count > 0 && (
+                    <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                      {space.unread_count > 99 ? "99+" : space.unread_count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+
+            {/* Empty State */}
+            {!loadingSpaces && spaces.length === 0 && (
+              <div className="px-3 py-6 text-center">
+                <Hash className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 mb-3">
+                  No spaces yet
+                </p>
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Create your first space
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
-
 
       {/* Username component at bottom */}
       <div className="absolute bottom-4 left-2 right-2">
         <Link href="/settings">
           <div className="flex items-center gap-3 p-3 hover:bg-neutral-100 rounded-lg transition-colors">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
+              <UserIcon className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-gray-900 truncate">Grant Adams</div>
@@ -270,11 +392,15 @@ export function Nav() {
       </div>
 
       {/* Create Space Modal */}
-      <CreateSpaceModal
-        isOpen={showCreateSpaceModal}
-        onClose={() => setShowCreateSpaceModal(false)}
-        onSpaceCreated={handleSpaceCreated}
-      />
+      {currentWorkspace && (
+        <CreateSpaceModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSpaceCreated={handleSpaceCreated}
+          user={user}
+          workspaceId={currentWorkspace.id}
+        />
+      )}
     </div>
   );
 }

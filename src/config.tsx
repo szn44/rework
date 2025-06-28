@@ -162,6 +162,7 @@ export interface IssueMetadata {
   labels: string[];
   project?: string;
   space?: string;
+  [key: string]: any; // Index signature for Liveblocks compatibility
 }
 
 export interface IssueItem {
@@ -181,3 +182,8 @@ export type RoomWithMetadata = {
   groupsAccesses: Record<string, any>;
   defaultAccesses: string[];
 };
+
+// Legacy function for backward compatibility
+export function getRoomId(issueId: string): string {
+  return `issue-${issueId}`;
+}

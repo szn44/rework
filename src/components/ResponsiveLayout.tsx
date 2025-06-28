@@ -4,19 +4,21 @@ import { ReactNode } from "react";
 import { useAISidebar } from "./AISidebarContext";
 import { useNavigation } from "./NavigationContext";
 import { ResizableNav } from "./ResizableNav";
+import { User } from "@supabase/supabase-js";
 
 interface ResponsiveLayoutProps {
   children: ReactNode;
   className?: string;
+  user?: User;
 }
 
-function ResponsiveLayoutInner({ children, className = "" }: ResponsiveLayoutProps) {
+function ResponsiveLayoutInner({ children, className = "", user }: ResponsiveLayoutProps) {
   const { isOpen, width: aiSidebarWidth } = useAISidebar();
   
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-white dark:bg-dark-bg-primary overflow-hidden">
       {/* Navigation */}
-      <ResizableNav />
+      <ResizableNav user={user} />
       
       {/* Main Content */}
       <div className={`flex-1 flex flex-col h-full min-w-0 ${className}`}>
@@ -26,9 +28,9 @@ function ResponsiveLayoutInner({ children, className = "" }: ResponsiveLayoutPro
   );
 }
 
-export function ResponsiveLayout({ children, className }: ResponsiveLayoutProps) {
+export function ResponsiveLayout({ children, className, user }: ResponsiveLayoutProps) {
   return (
-    <ResponsiveLayoutInner className={className}>
+    <ResponsiveLayoutInner className={className} user={user}>
       {children}
     </ResponsiveLayoutInner>
   );

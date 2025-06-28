@@ -5,7 +5,7 @@ import { RoomWithMetadata } from "@/config";
 export async function POST(request: NextRequest) {
   try {
     // Get all rooms
-    const allRooms = (await liveblocks.getRooms()).data as RoomWithMetadata[];
+    const allRooms = (await liveblocks.getRooms()).data as unknown as RoomWithMetadata[];
     
     // Filter to only issue rooms (not wiki or project rooms)
     const issueRooms = allRooms.filter(room => {

@@ -20,7 +20,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
   const { spaceId } = params;
 
   return (
-    <ResponsiveLayout>
+    <ResponsiveLayout user={user}>
       <div className="flex flex-col h-full">
         <ChatInterface spaceName={spaceId} user={user} />
       </div>

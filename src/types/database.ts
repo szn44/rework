@@ -1,6 +1,6 @@
 // Import Supabase generated types (will be generated later)
 // These are placeholder types until Supabase types are generated
-type Database = any;
+export type Database = any;
 type Enums<T extends string> = any;
 type InsertTables<T extends string> = any;
 type UpdateTables<T extends string> = any;

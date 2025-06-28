@@ -18,7 +18,7 @@ export default function PageHome() {
         <div className="flex-grow">
           {selectedIssueId ? (
             <IssueProvider issueId={selectedIssueId}>
-              <Issue />
+              <Issue issueId={selectedIssueId} />
             </IssueProvider>
           ) : (
             <div className="flex items-center justify-center h-full text-sm text-neutral-500 font-medium">
