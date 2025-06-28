@@ -91,30 +91,30 @@ export function Inbox({ onIssueSelect }: InboxProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 text-sm border-b h-12 bg-white flex-shrink-0">
+    <div className="flex flex-col h-full bg-white dark:bg-dark-bg-primary">
+      <div className="flex items-center justify-between px-4 text-sm border-b dark:border-dark-bg-tertiary h-12 bg-white dark:bg-dark-bg-primary flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="font-semibold text-neutral-900">Inbox</h1>
-            <div className="text-xs text-neutral-500">
+            <h1 className="font-semibold text-neutral-900 dark:text-dark-text-primary">Inbox</h1>
+            <div className="text-xs text-neutral-500 dark:text-dark-text-secondary">
               {assignedIssues.length} assigned issues
             </div>
           </div>
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-dark-bg-primary">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-sm text-neutral-500">Loading assigned issues...</div>
+            <div className="text-sm text-neutral-500 dark:text-dark-text-secondary">Loading assigned issues...</div>
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-sm text-red-500">{error}</div>
+            <div className="text-sm text-red-500 dark:text-red-400">{error}</div>
           </div>
         ) : assignedIssues.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-sm text-neutral-500">No assigned issues</div>
+            <div className="text-sm text-neutral-500 dark:text-dark-text-secondary">No assigned issues</div>
           </div>
         ) : (
           <div className="p-2 space-y-2">
@@ -173,7 +173,7 @@ function IssueCard({ issue, onClick }: IssueCardProps) {
   return (
     <div
       style={cardStyle}
-      className="group relative bg-white rounded-xl border-0 transition-all duration-200 cursor-pointer hover:shadow-lg hover:-translate-y-1"
+      className="group relative bg-white dark:bg-dark-bg-secondary rounded-xl border-0 transition-all duration-200 cursor-pointer hover:shadow-lg hover:-translate-y-1"
     >
       <button
         onClick={handleCardClick}
@@ -187,15 +187,15 @@ function IssueCard({ issue, onClick }: IssueCardProps) {
                 {priorityState.icon}
               </div>
             )}
-            <span className="text-xs font-mono text-gray-500 tracking-wide font-medium">
+            <span className="text-xs font-mono text-gray-500 dark:text-dark-text-secondary tracking-wide font-medium">
               {issue.workspace_slug}-{issue.issue_number}
             </span>
           </div>
-          <span className="text-xs text-gray-400 font-medium">{date}</span>
+          <span className="text-xs text-gray-400 dark:text-dark-text-tertiary font-medium">{date}</span>
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
+        <h3 className="font-semibold text-gray-800 dark:text-dark-text-primary text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
           {issue.title || 'Untitled'}
         </h3>
 
@@ -227,8 +227,8 @@ function IssueCard({ issue, onClick }: IssueCardProps) {
             </div>
           )}
           {issue.status && (
-            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50/80 border border-gray-100 rounded-md text-xs font-medium text-gray-600">
-              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50/80 dark:bg-dark-bg-tertiary/60 border border-gray-100 dark:border-dark-bg-tertiary rounded-md text-xs font-medium text-gray-600 dark:text-dark-text-secondary">
+              <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-dark-text-tertiary rounded-full" />
               {issue.status.replace('_', ' ')}
             </div>
           )}

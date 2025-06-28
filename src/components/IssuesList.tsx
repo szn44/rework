@@ -32,12 +32,12 @@ export function IssuesList({
   const done = useMemo(() => issues.filter((item) => item.metadata.progress === "done"), [issues]);
 
   return (
-    <div>
+    <div className="bg-white dark:bg-dark-bg-primary">
       {!hideHeader && (
-        <div className="flex items-center justify-between px-4 text-sm border-b h-12 bg-white">
+        <div className="flex items-center justify-between px-4 text-sm border-b dark:border-dark-bg-tertiary h-12 bg-white dark:bg-dark-bg-primary">
           <div className="flex items-center gap-3">
-            <h1 className="font-semibold text-neutral-900">Issues</h1>
-            <div className="text-xs text-neutral-500">
+            <h1 className="font-semibold text-neutral-900 dark:text-dark-text-primary">Issues</h1>
+            <div className="text-xs text-neutral-500 dark:text-dark-text-secondary">
               {issues.length} issue{issues.length !== 1 ? 's' : ''}
             </div>
           </div>
@@ -46,10 +46,10 @@ export function IssuesList({
       )}
 
       {/* Todo Section - Always show */}
-      <div className="flex items-center gap-2 bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-800 w-full border-b">
-        <ProgressTodoIcon className="w-4 h-4 text-neutral-500" />
+      <div className="flex items-center gap-2 bg-neutral-100 dark:bg-dark-bg-secondary px-4 py-2 text-sm font-medium text-neutral-800 dark:text-dark-text-primary w-full border-b dark:border-dark-bg-tertiary">
+        <ProgressTodoIcon className="w-4 h-4 text-neutral-500 dark:text-dark-text-secondary" />
         <span>Todo</span>
-        <span className="ml-auto text-xs text-neutral-500">
+        <span className="ml-auto text-xs text-neutral-500 dark:text-dark-text-secondary">
           {todo.length + none.length}
         </span>
       </div>
@@ -64,10 +64,10 @@ export function IssuesList({
       )}
 
       {/* In Progress Section - Always show */}
-      <div className="flex items-center gap-2 bg-yellow-50 px-4 py-2 text-sm font-medium text-neutral-800 w-full border-b">
-        <ProgressInProgressIcon className="w-4 h-4 text-yellow-500" />
+      <div className="flex items-center gap-2 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 text-sm font-medium text-neutral-800 dark:text-dark-text-primary w-full border-b dark:border-dark-bg-tertiary">
+        <ProgressInProgressIcon className="w-4 h-4 text-yellow-500 dark:text-yellow-400" />
         <span>In Progress</span>
-        <span className="ml-auto text-xs text-neutral-500">
+        <span className="ml-auto text-xs text-neutral-500 dark:text-dark-text-secondary">
           {inProgress.length}
         </span>
       </div>
@@ -79,10 +79,10 @@ export function IssuesList({
       )}
 
       {/* In Review Section - Always show */}
-      <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 text-sm font-medium text-neutral-800 w-full border-b">
-        <ProgressInReviewIcon className="w-4 h-4 text-emerald-500" />
+      <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-2 text-sm font-medium text-neutral-800 dark:text-dark-text-primary w-full border-b dark:border-dark-bg-tertiary">
+        <ProgressInReviewIcon className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
         <span>In Review</span>
-        <span className="ml-auto text-xs text-neutral-500">
+        <span className="ml-auto text-xs text-neutral-500 dark:text-dark-text-secondary">
           {inReview.length}
         </span>
       </div>
@@ -94,10 +94,10 @@ export function IssuesList({
       )}
 
       {/* Done Section - Always show */}
-      <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 text-sm font-medium text-neutral-800 w-full border-b">
-        <ProgressDoneIcon className="w-4 h-4 text-indigo-500" />
+      <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 px-4 py-2 text-sm font-medium text-neutral-800 dark:text-dark-text-primary w-full border-b dark:border-dark-bg-tertiary">
+        <ProgressDoneIcon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
         <span>Done</span>
-        <span className="ml-auto text-xs text-neutral-500">
+        <span className="ml-auto text-xs text-neutral-500 dark:text-dark-text-secondary">
           {done.length}
         </span>
       </div>
@@ -149,13 +149,13 @@ export function Row({ issue }: { issue: IssueItem }) {
   return (
     <button
       onClick={handleClick}
-      className="group flex h-12 items-center justify-between px-4 text-sm transition-all duration-150 hover:bg-neutral-50 hover:shadow-sm border-b border-neutral-100 bg-white w-full text-left"
+      className="group flex h-12 items-center justify-between px-4 text-sm transition-all duration-150 hover:bg-neutral-50 dark:hover:bg-dark-bg-secondary hover:shadow-sm border-b border-neutral-100 dark:border-dark-bg-tertiary bg-white dark:bg-dark-bg-primary w-full text-left"
     >
       <div className="flex gap-3 items-center min-w-0 flex-1">
         <div className="w-5 flex-shrink-0">
           {PRIORITY_STATES.find((p) => p.id === priority)?.icon}
         </div>
-        <div className="font-medium text-neutral-900 truncate group-hover:text-neutral-700 transition-colors">
+        <div className="font-medium text-neutral-900 dark:text-dark-text-primary truncate group-hover:text-neutral-700 dark:group-hover:text-dark-text-secondary transition-colors">
           {title}
         </div>
       </div>
@@ -182,7 +182,7 @@ export function Row({ issue }: { issue: IssueItem }) {
             )
           )}
         </div>
-        <div className="flex-none w-16 text-right text-xs text-neutral-500 font-medium">
+        <div className="flex-none w-16 text-right text-xs text-neutral-500 dark:text-dark-text-secondary font-medium">
           {date}
         </div>
         <div className="flex-shrink-0">
@@ -195,7 +195,7 @@ export function Row({ issue }: { issue: IssueItem }) {
 
 function EmptyStateRow({ progressType }: { progressType: string }) {
   return (
-    <div className="flex h-12 items-center justify-start px-4 text-sm border-b border-neutral-100 bg-white">
+    <div className="flex h-12 items-center justify-start px-4 text-sm border-b border-neutral-100 dark:border-dark-bg-tertiary bg-white dark:bg-dark-bg-primary">
       <CreateIssueWithProgress progressType={progressType} />
     </div>
   );
@@ -253,8 +253,8 @@ function CreateIssueWithProgress({ progressType }: { progressType: string }) {
 
   if (!currentWorkspace) {
     return (
-      <div className="flex h-12 items-center justify-start px-4 text-sm border-b border-neutral-100 bg-white">
-        <span className="text-neutral-400">No workspace selected</span>
+      <div className="flex h-12 items-center justify-start px-4 text-sm border-b border-neutral-100 dark:border-dark-bg-tertiary bg-white dark:bg-dark-bg-primary">
+        <span className="text-neutral-400 dark:text-dark-text-tertiary">No workspace selected</span>
       </div>
     );
   }
@@ -263,7 +263,7 @@ function CreateIssueWithProgress({ progressType }: { progressType: string }) {
     <button
       onClick={handleCreateIssue}
       disabled={isCreating}
-      className="flex items-center gap-2 text-neutral-500 hover:text-neutral-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center gap-2 text-neutral-500 dark:text-dark-text-secondary hover:text-neutral-700 dark:hover:text-dark-text-primary transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isCreating ? (
         <>

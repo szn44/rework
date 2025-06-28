@@ -11,8 +11,8 @@ export default function PageHome() {
 
   return (
     <ResponsiveLayout>
-      <main className="m-2 border flex-grow bg-white rounded flex flex-row overflow-hidden">
-        <div className="border-r w-[300px]">
+      <main className="m-2 border dark:border-dark-bg-tertiary flex-grow bg-white dark:bg-dark-bg-primary rounded flex flex-row overflow-hidden">
+        <div className="border-r dark:border-dark-bg-tertiary w-[300px]">
           <Inbox onIssueSelect={setSelectedIssueId} />
         </div>
         <div className="flex-grow">
@@ -21,7 +21,7 @@ export default function PageHome() {
               <Issue issueId={selectedIssueId} />
             </IssueProvider>
           ) : (
-            <div className="flex items-center justify-center h-full text-sm text-neutral-500 font-medium">
+            <div className="flex items-center justify-center h-full text-sm text-neutral-500 dark:text-dark-text-secondary font-medium">
               Select an issue
             </div>
           )}

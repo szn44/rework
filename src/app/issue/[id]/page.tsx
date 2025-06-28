@@ -14,9 +14,9 @@ export default async function PageHome({
   return (
     <IssueProvider issueId={id}>
       <ResponsiveLayout>
-        <main className="m-2 border flex-grow bg-white rounded flex flex-row overflow-hidden">
+        <main className="m-2 border dark:border-dark-bg-tertiary flex-grow bg-white dark:bg-dark-bg-primary rounded flex flex-row overflow-hidden">
           <DisplayWhenInboxOpen>
-            <div className="border-r w-[200px] xl:w-[300px]">
+            <div className="border-r dark:border-dark-bg-tertiary w-[200px] xl:w-[300px]">
               <Inbox />
             </div>
           </DisplayWhenInboxOpen>

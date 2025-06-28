@@ -55,19 +55,19 @@ export default function AgentsPage() {
 
   return (
     <ResponsiveLayout>
-      <main className="m-2 border flex-grow bg-white rounded overflow-hidden">
+      <main className="m-2 border dark:border-dark-bg-tertiary flex-grow bg-white dark:bg-dark-bg-primary rounded overflow-hidden">
         <div className="h-full flex flex-col overflow-hidden">
           {/* Header matching other pages */}
-          <div className="flex items-center justify-between px-4 text-sm border-b h-12 bg-white flex-shrink-0">
+          <div className="flex items-center justify-between px-4 text-sm border-b dark:border-dark-bg-tertiary h-12 bg-white dark:bg-dark-bg-primary flex-shrink-0">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <h1 className="font-semibold text-neutral-900">Agents</h1>
-                <div className="text-xs text-neutral-500">
+                <h1 className="font-semibold text-neutral-900 dark:text-dark-text-primary">Agents</h1>
+                <div className="text-xs text-neutral-500 dark:text-dark-text-secondary">
                   {agents.length} agents
                 </div>
               </div>
             </div>
-            <button className="bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 px-3 py-2 text-sm font-medium">
+            <button className="bg-gray-800 dark:bg-dark-bg-tertiary hover:bg-gray-900 dark:hover:bg-dark-bg-secondary text-white dark:text-dark-text-primary rounded-lg transition-colors duration-200 flex items-center gap-2 px-3 py-2 text-sm font-medium">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
@@ -76,12 +76,12 @@ export default function AgentsPage() {
           </div>
 
           {/* Content with proper grid */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-6">
+          <div className="flex-1 min-h-0 overflow-y-auto p-6 bg-gray-50 dark:bg-dark-bg-primary">
             <div className="grid grid-cols-4 gap-6">
               {agents.map((agent, index) => (
                 <div
                   key={index}
-                  className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+                  className="group relative bg-white dark:bg-dark-bg-secondary rounded-xl border border-gray-200 dark:border-dark-bg-tertiary overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer"
                 >
                   {/* Colored header */}
                   <div className={`${agent.bgColor} p-4 h-32 relative overflow-hidden`}>
@@ -118,13 +118,13 @@ export default function AgentsPage() {
 
                   {/* Content */}
                   <div className="p-4">
-                    <h3 className="text-base font-semibold text-gray-900 group-hover:text-gray-700 transition-colors mb-2">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-dark-text-primary group-hover:text-gray-700 dark:group-hover:text-dark-text-secondary transition-colors mb-2">
                       {agent.title}
                     </h3>
-                    <p className="text-xs text-gray-500 mb-3">AI-powered conversational agent ready for deployment</p>
+                    <p className="text-xs text-gray-500 dark:text-dark-text-secondary mb-3">AI-powered conversational agent ready for deployment</p>
 
                     {/* Status indicators */}
-                    <div className="flex items-center space-x-3 text-xs text-gray-400">
+                    <div className="flex items-center space-x-3 text-xs text-gray-400 dark:text-dark-text-tertiary">
                       <div className="flex items-center space-x-1">
                         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                         <span>Active</span>
