@@ -15,7 +15,7 @@ import "../liveblocks.css";
 export const metadata: Metadata = {
   title: "Rework",
   description:
-    "Modern project management and collaboration platform with AI-powered features.",
+    "Where teams work together with agents.",
   icons: {
     icon: '/favicon.ico',
   },
