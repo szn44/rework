@@ -67,11 +67,12 @@ export default function AgentsPage() {
                 </div>
               </div>
             </div>
-            <button className="bg-gray-800 dark:bg-dark-bg-tertiary hover:bg-gray-900 dark:hover:bg-dark-bg-secondary text-white dark:text-dark-text-primary rounded-lg transition-colors duration-200 flex items-center gap-2 px-3 py-2 text-sm font-medium">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 dark:hover:shadow-blue-500/25 transition-all duration-300 ease-out transform hover:-translate-y-0.5 flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold">
+              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <svg className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              New Agent
+              <span className="relative z-10">New Agent</span>
             </button>
           </div>
 
@@ -149,11 +150,12 @@ export default function AgentsPage() {
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No agents yet</h3>
                 <p className="text-gray-500 mb-4">Create your first AI agent to get started</p>
-                <button className="bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 px-3 py-2 text-sm font-medium">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 dark:hover:shadow-blue-500/25 transition-all duration-300 ease-out transform hover:-translate-y-0.5 flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold mx-auto">
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <svg className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  New Agent
+                  <span className="relative z-10">New Agent</span>
                 </button>
               </div>
             )}

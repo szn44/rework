@@ -61,17 +61,18 @@ export function CreateSpaceIssueButton({ spaceId }: CreateSpaceIssueButtonProps)
     <button
       onClick={handleCreateIssue}
       disabled={isCreating}
-      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 dark:disabled:from-gray-600 dark:disabled:to-gray-700 text-white rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 dark:hover:shadow-blue-500/25 disabled:shadow-none transition-all duration-300 ease-out transform hover:-translate-y-0.5 disabled:transform-none flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed"
     >
+      <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 group-disabled:opacity-0 transition-opacity duration-300"></div>
       {isCreating ? (
         <>
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          <span>Creating...</span>
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin relative z-10" />
+          <span className="relative z-10">Creating...</span>
         </>
       ) : (
         <>
-          <Plus className="w-4 h-4" />
-          <span>Add Task</span>
+          <Plus className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:scale-110 group-disabled:scale-100" />
+          <span className="relative z-10">Add Task</span>
         </>
       )}
     </button>

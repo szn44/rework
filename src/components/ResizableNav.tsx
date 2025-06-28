@@ -313,13 +313,14 @@ export function ResizableNav({ user }: ResizableNavProps) {
               <button
                 onClick={handleCreateIssue}
                 disabled={creating}
-                className="bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg p-1.5 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 dark:disabled:from-gray-600 dark:disabled:to-gray-700 text-white rounded-lg shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 dark:hover:shadow-blue-500/25 disabled:shadow-none transition-all duration-300 ease-out transform hover:-translate-y-0.5 disabled:transform-none p-1.5 disabled:cursor-not-allowed"
                 title="Create Issue"
               >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 group-disabled:opacity-0 transition-opacity duration-300"></div>
                 {creating ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin relative z-10" />
                 ) : (
-                  <CreateIcon className="w-3.5 h-3.5" />
+                  <CreateIcon className="w-3.5 h-3.5 relative z-10 transition-transform duration-300 group-hover:scale-110 group-disabled:scale-100" />
                 )}
               </button>
             </div>
