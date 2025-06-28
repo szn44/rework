@@ -12,28 +12,19 @@ interface ViewSwitcherProps {
 
 export function ViewSwitcher({ currentView, onViewChange }: ViewSwitcherProps) {
   return (
-    <div className="relative inline-flex items-center bg-gray-100 rounded-lg p-0.5 shadow-inner">
-      <motion.div
-        className="absolute inset-y-0.5 bg-white rounded-md shadow-sm border border-gray-200/60"
-        layout
-        initial={false}
-        animate={{
-          x: currentView === "list" ? 2 : "calc(100% + 2px)",
-          width: "calc(50% - 2px)",
-        }}
-        transition={{
-          type: "spring",
-          stiffness: 400,
-          damping: 30,
-        }}
+    <div className="relative inline-flex items-center bg-gray-100 dark:bg-dark-bg-secondary rounded-lg p-1">
+      <div
+        className={`absolute top-1 bottom-1 bg-white dark:bg-dark-bg-primary rounded-md shadow-sm transition-all duration-200 ease-out ${
+          currentView === "list" ? "left-1 right-[50%]" : "left-[50%] right-1"
+        }`}
       />
       
       <button
         onClick={() => onViewChange("list")}
-        className={`relative z-10 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md min-w-[90px] ${
+        className={`relative z-10 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md min-w-[70px] ${
           currentView === "list"
-            ? "text-gray-900"
-            : "text-gray-600 hover:text-gray-800"
+            ? "text-gray-900 dark:text-dark-text-primary"
+            : "text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary"
         }`}
       >
         <svg
@@ -56,8 +47,8 @@ export function ViewSwitcher({ currentView, onViewChange }: ViewSwitcherProps) {
         onClick={() => onViewChange("board")}
         className={`relative z-10 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md min-w-[70px] ${
           currentView === "board"
-            ? "text-gray-900"
-            : "text-gray-600 hover:text-gray-800"
+            ? "text-gray-900 dark:text-dark-text-primary"
+            : "text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary"
         }`}
       >
         <svg

@@ -159,7 +159,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
         ...activeItem,
         metadata: {
           ...activeItem.metadata,
-          progress: overColumn.statuses[0], // Use the first status from the column
+          progress: overColumn.statuses[0] as "todo" | "none" | "progress" | "review" | "done",
         },
       };
       
@@ -238,7 +238,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
                 ...item,
                 metadata: {
                   ...item.metadata,
-                  progress: newProgress,
+                  progress: newProgress as "todo" | "none" | "progress" | "review" | "done",
                 },
               }
             : item
@@ -258,7 +258,7 @@ export function KanbanBoard({ items, type, onProgressChange }: KanbanBoardProps)
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-dark-bg-primary dark:to-dark-bg-secondary">
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}

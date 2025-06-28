@@ -108,7 +108,7 @@ export function FloatingToolbarOptions({
       layoutId="floating-toolbar-main"
       layout="size"
       style={{ display: state !== "ai" ? "block" : "none" }}
-      className="p-1 rounded-lg border shadow-lg border-gray-200 bg-white pointer-events-auto origin-top text-gray-600"
+      className="p-1 rounded-lg border shadow-lg border-gray-200 dark:border-dark-bg-tertiary bg-white dark:bg-dark-bg-secondary pointer-events-auto origin-top text-gray-600 dark:text-dark-text-primary"
       initial={{ x: 0, y: 0, opacity: 0, scale: 0.93 }}
       animate={{
         opacity: 1,
@@ -125,14 +125,14 @@ export function FloatingToolbarOptions({
             setState("ai");
             onOpenAi();
           }}
-          className="px-3 py-1.5 inline-flex relative items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-100 hover:text-gray-900 h-8"
+          className="px-3 py-1.5 inline-flex relative items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary h-8"
         >
-          <div className="flex items-center text-indigo-600 font-semibold">
+          <div className="flex items-center text-indigo-600 dark:text-indigo-400 font-semibold">
             <Sparkles className="h-4 w-4 mr-1" /> AI
           </div>
         </button>
 
-        <span className="w-[1px] py-3.5 bg-gray-200" />
+        <span className="w-[1px] py-3.5 bg-gray-200 dark:bg-dark-bg-tertiary" />
 
         <label htmlFor="select-block" className="h-8 items-center align-top">
           <span className="sr-only">Select block type</span>
@@ -141,18 +141,18 @@ export function FloatingToolbarOptions({
             onChange={(e) => {
               editor.update(() => toggleBlock(e.currentTarget.value as DropdownIds));
             }}
-            className="bg-transparent border-0 h-8 pl-2 pr-6 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-gray-100 text-sm"
+            className="bg-transparent border-0 h-8 pl-2 pr-6 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary text-sm text-gray-900 dark:text-dark-text-primary"
             value={activeBlock || "paragraph"}
           >
             {DROPDOWN_OPTIONS.map(({ id, text }) => (
-              <option key={id} value={id}>
+              <option key={id} value={id} className="bg-white dark:bg-dark-bg-secondary text-gray-900 dark:text-dark-text-primary">
                 {text}
               </option>
             ))}
           </select>
         </label>
 
-        <span className="w-[1px] py-3.5 bg-gray-200" />
+        <span className="w-[1px] py-3.5 bg-gray-200 dark:bg-dark-bg-tertiary" />
 
         <ToolbarButton
           onClick={() => {
@@ -213,7 +213,7 @@ function ToolbarButton({
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-100 hover:text-gray-900 h-8 w-8"
+      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary h-8 w-8"
     >
       {children}
     </button>

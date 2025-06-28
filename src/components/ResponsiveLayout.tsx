@@ -16,7 +16,7 @@ function ResponsiveLayoutInner({ children, className = "", user }: ResponsiveLay
   const { isOpen, width: aiSidebarWidth } = useAISidebar();
   
   return (
-    <div className="flex h-screen bg-white dark:bg-dark-bg-primary overflow-hidden">
+    <div className="flex h-screen bg-neutral-200/50 dark:bg-dark-bg-nav overflow-hidden">
       {/* Navigation */}
       <ResizableNav user={user} />
       

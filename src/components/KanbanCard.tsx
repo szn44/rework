@@ -82,14 +82,14 @@ export function KanbanCard({ issue, type }: KanbanCardProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       whileHover={{ y: -1, boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 2px 2px -1px rgba(0, 0, 0, 0.06)' }}
-      className={`group relative bg-white rounded-xl border-0 transition-all duration-200 cursor-pointer ${
+      className={`group relative bg-white dark:bg-dark-bg-secondary rounded-xl border-0 transition-all duration-200 cursor-pointer ${
         isDragging ? "opacity-50 scale-105 rotate-2 z-50" : ""
       }`}
     >
       {/* Drag Handle Indicator */}
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <div className="w-4 h-4 rounded-md bg-gray-50 flex items-center justify-center">
-          <svg className="w-2.5 h-2.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <div className="w-4 h-4 rounded-md bg-gray-50 dark:bg-dark-bg-tertiary flex items-center justify-center">
+          <svg className="w-2.5 h-2.5 text-gray-400 dark:text-dark-text-secondary" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
           </svg>
         </div>
@@ -107,15 +107,15 @@ export function KanbanCard({ issue, type }: KanbanCardProps) {
                 {priorityState.icon}
               </div>
             )}
-            <span className="text-xs font-mono text-gray-500 tracking-wide font-medium">
+            <span className="text-xs font-mono text-gray-500 dark:text-dark-text-secondary tracking-wide font-medium">
               {metadata.issueId}
             </span>
           </div>
-          <span className="text-xs text-gray-400 font-medium">{date}</span>
+          <span className="text-xs text-gray-400 dark:text-dark-text-tertiary font-medium">{date}</span>
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
+        <h3 className="font-semibold text-gray-800 dark:text-dark-text-primary text-sm leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
           {metadata.title}
         </h3>
 
@@ -123,7 +123,7 @@ export function KanbanCard({ issue, type }: KanbanCardProps) {
         {(metadata.labels.length > 0 || metadata.project) && (
           <div className="flex flex-wrap gap-1.5">
             {metadata.project && PROJECTS.find(p => p.id === metadata.project) && (
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50/80 border border-blue-100 rounded-md text-xs font-medium text-blue-700">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50/80 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-md text-xs font-medium text-blue-700 dark:text-blue-300">
                 <div 
                   className="w-1.5 h-1.5 rounded-full" 
                   style={{ backgroundColor: PROJECTS.find(p => p.id === metadata.project)?.color }}
@@ -135,15 +135,15 @@ export function KanbanCard({ issue, type }: KanbanCardProps) {
               ({ id, text }) => (
                 <div
                   key={id}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50/80 border border-gray-100 rounded-md text-xs font-medium text-gray-600"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-md text-xs font-medium text-gray-600 dark:text-gray-300"
                 >
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+                  <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full" />
                   {text}
                 </div>
               )
             )}
             {metadata.labels.length > 2 && (
-              <div className="inline-flex items-center px-2 py-0.5 bg-gray-50/80 border border-gray-100 rounded-md text-xs font-medium text-gray-500">
+              <div className="inline-flex items-center px-2 py-0.5 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-md text-xs font-medium text-gray-500 dark:text-gray-400">
                 +{metadata.labels.length - 2}
               </div>
             )}
@@ -162,8 +162,8 @@ export function KanbanCard({ issue, type }: KanbanCardProps) {
           
           {/* Hover Effect Indicator */}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <div className="w-5 h-5 rounded-md bg-blue-50 flex items-center justify-center">
-              <svg className="w-2.5 h-2.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-5 h-5 rounded-md bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+              <svg className="w-2.5 h-2.5 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
@@ -173,7 +173,7 @@ export function KanbanCard({ issue, type }: KanbanCardProps) {
 
       {/* Dragging Overlay */}
       {isDragging && (
-        <div className="absolute inset-0 bg-blue-50/60 border-2 border-blue-200 border-dashed rounded-xl pointer-events-none backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-blue-50/60 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-600 border-dashed rounded-xl pointer-events-none backdrop-blur-sm" />
       )}
     </motion.div>
   );

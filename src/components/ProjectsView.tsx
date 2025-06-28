@@ -94,11 +94,11 @@ export function ProjectsView() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 text-sm border-b h-12 bg-white flex-shrink-0">
+      <div className="flex items-center justify-between px-4 text-sm border-b dark:border-dark-bg-tertiary h-12 bg-white dark:bg-dark-bg-primary flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="font-semibold text-neutral-900">Projects</h1>
-            <div className="text-xs text-neutral-500">
+            <h1 className="font-semibold text-neutral-900 dark:text-dark-text-primary">Projects</h1>
+            <div className="text-xs text-neutral-500 dark:text-dark-text-secondary">
               {mockProjects.length} project{mockProjects.length !== 1 ? 's' : ''}
             </div>
           </div>
@@ -108,7 +108,7 @@ export function ProjectsView() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 bg-gray-50 dark:bg-dark-bg-primary">
         {currentView === "list" ? (
           <div className="h-full overflow-y-auto">
             <ProjectsList hideHeader={true} />

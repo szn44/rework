@@ -66,7 +66,7 @@ export function KanbanColumn({ id, title, icon, color, items, type }: KanbanColu
       {/* Column Header - Compact styling to match image */}
       <div className="flex-shrink-0 mb-3">
         <div 
-          className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/60 backdrop-blur-sm transition-all duration-200 hover:bg-white/80"
+          className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/60 dark:bg-dark-bg-secondary/60 backdrop-blur-sm transition-all duration-200 hover:bg-white/80 dark:hover:bg-dark-bg-secondary/80"
           style={{ 
             backgroundColor: `${color}06`,
             boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
@@ -79,7 +79,7 @@ export function KanbanColumn({ id, title, icon, color, items, type }: KanbanColu
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-800 text-sm">{title}</span>
+              <span className="font-semibold text-gray-800 dark:text-dark-text-primary text-sm">{title}</span>
               <span 
                 className="inline-flex items-center justify-center w-4 h-4 text-xs font-bold rounded-full text-white"
                 style={{ backgroundColor: color }}
@@ -93,11 +93,11 @@ export function KanbanColumn({ id, title, icon, color, items, type }: KanbanColu
           <button
             onClick={handleCreateItem}
             disabled={isCreating}
-            className="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group"
+            className="flex items-center justify-center w-6 h-6 text-gray-400 dark:text-dark-text-secondary hover:text-gray-600 dark:hover:text-dark-text-primary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group"
             title={`Add ${type}`}
           >
             {isCreating ? (
-              <div className="w-2.5 h-2.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              <div className="w-2.5 h-2.5 border-2 border-gray-400 dark:border-dark-text-secondary border-t-transparent rounded-full animate-spin" />
             ) : (
               <svg className="w-3.5 h-3.5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -162,13 +162,13 @@ export function KanbanColumn({ id, title, icon, color, items, type }: KanbanColu
                 animate={{ opacity: 1 }}
                 className="flex flex-col items-center justify-center py-8 text-center"
               >
-                <div className="text-gray-300 mb-2">
+                <div className="text-gray-300 dark:text-dark-text-tertiary mb-2">
                   <svg className="w-6 h-6 mx-auto" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <p className="text-xs text-gray-400 font-medium mb-1">No {type}s yet</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 dark:text-dark-text-tertiary font-medium mb-1">No {type}s yet</p>
+                <p className="text-xs text-gray-400 dark:text-dark-text-tertiary">
                   Drop {type}s here or click + to create
                 </p>
               </motion.div>
@@ -179,12 +179,12 @@ export function KanbanColumn({ id, title, icon, color, items, type }: KanbanColu
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="h-16 border-2 border-blue-200/50 border-dashed rounded-xl bg-blue-50/40 flex items-center justify-center mx-1 mb-2"
+                className="h-16 border-2 border-blue-200/50 dark:border-blue-400/30 border-dashed rounded-xl bg-blue-50/40 dark:bg-blue-900/20 flex items-center justify-center mx-1 mb-2"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-                  <span className="text-blue-600 text-xs font-medium">Drop here</span>
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                  <div className="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-300 rounded-full animate-pulse"></div>
+                  <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">Drop here</span>
+                  <div className="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-300 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
                 </div>
               </motion.div>
             )}

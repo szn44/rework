@@ -72,7 +72,7 @@ export function CreateIssueButton() {
 
   if (!currentWorkspace) {
     return (
-      <div className="bg-gray-300 text-gray-500 rounded-lg px-3 py-2 text-sm font-medium cursor-not-allowed">
+      <div className="bg-gray-300 dark:bg-dark-bg-tertiary text-gray-500 dark:text-dark-text-tertiary rounded-lg px-3 py-2 text-sm font-medium cursor-not-allowed">
         No Workspace
       </div>
     );
@@ -82,7 +82,7 @@ export function CreateIssueButton() {
     <button
       onClick={handleCreateIssue}
       disabled={isCreating}
-      className="bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 px-3 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+      className="bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 px-3 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isCreating ? (
         <>

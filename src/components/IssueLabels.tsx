@@ -37,12 +37,12 @@ export function IssueLabels({
         ({ id, text }) => (
           <div
             key={id}
-            className="text-sm font-medium rounded-full px-2 py-0.5 border shadow-xs flex items-center gap-1.5 select-none text-neutral-700"
+            className="text-sm font-medium rounded-full px-2 py-0.5 border shadow-xs flex items-center gap-1.5 select-none text-neutral-700 dark:text-neutral-300 bg-white dark:bg-dark-bg-secondary border-neutral-200 dark:border-dark-bg-tertiary"
           >
-            <div className="bg-neutral-400/60 rounded-full w-2 h-2" />
+            <div className="bg-neutral-400/60 dark:bg-neutral-500/60 rounded-full w-2 h-2" />
             {text}{" "}
             <button
-              className="text-base leading-none pb-0.5 text-neutral-400 hover:text-neutral-600 transition-colors"
+              className="text-base leading-none pb-0.5 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
               onClick={() => removeLabel(id)}
             >
               ×

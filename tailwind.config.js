@@ -12,6 +12,7 @@ module.exports = {
             primary: "#161616",    // Main background
             secondary: "#232323",  // Secondary background (cards, panels)
             tertiary: "#303031",   // Tertiary background (hover states, borders)
+            nav: "#121212",        // Navigation background (darker)
           },
           text: {
             primary: "#ECECEC",    // Primary text

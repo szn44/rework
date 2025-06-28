@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           type="image/png"
         />
       </head>
-      <body className="bg-neutral-200/50 dark:bg-dark-bg-primary text-neutral-900 dark:text-dark-text-primary antialiased h-full w-full overflow-hidden transition-colors duration-200">
+      <body className="bg-neutral-200/50 dark:bg-dark-bg-nav text-neutral-900 dark:text-dark-text-primary antialiased h-full w-full overflow-hidden transition-colors duration-200">
         <ThemeProvider>
           <AISidebarProvider>
             <NavigationProvider>

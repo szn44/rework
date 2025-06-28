@@ -590,7 +590,7 @@ export function SettingsLayout() {
                 </button>
                 <button 
                   onClick={loadProfile}
-                  className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors duration-200"
+                  className="px-4 py-2 border border-gray-300 dark:border-dark-bg-tertiary hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary text-gray-700 dark:text-dark-text-primary rounded-lg text-sm font-medium transition-colors duration-200"
                 >
                   Reset
                 </button>
@@ -651,70 +651,70 @@ export function SettingsLayout() {
   const renderTeamSection = () => (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Team Settings</h2>
-        <p className="text-sm text-gray-600">Manage and view your coworkers and guests</p>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-2">Team Settings</h2>
+        <p className="text-sm text-gray-600 dark:text-dark-text-secondary">Manage and view your coworkers and guests</p>
       </div>
 
       {/* Invite Section */}
-      <div className="bg-gradient-to-r from-purple-50 to-orange-50 border border-purple-200 rounded-xl p-6">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">Invite Team Members</h3>
+      <div className="bg-gradient-to-r from-purple-50 to-orange-50 dark:from-purple-900/20 dark:to-orange-900/20 border border-purple-200 dark:border-purple-800/50 rounded-xl p-6">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-dark-text-primary mb-4">Invite Team Members</h3>
         <div className="flex gap-3 mb-4">
           <input
             type="email"
             placeholder="Add emails..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm"
+            className="flex-1 px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary dark:bg-dark-bg-secondary dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm placeholder:text-gray-500 dark:placeholder:text-dark-text-tertiary"
           />
-          <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm">
+          <select className="px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary dark:bg-dark-bg-secondary dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm">
             <option>Guest</option>
             <option>Member</option>
             <option>Admin</option>
           </select>
-          <button className="px-6 py-2 bg-black hover:bg-gray-800 text-white rounded-lg text-sm font-medium transition-colors duration-200">
+          <button className="px-6 py-2 bg-black hover:bg-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors duration-200">
             Invite (1)
           </button>
         </div>
         <div className="flex gap-3 text-xs">
-          <button className="px-3 py-1 bg-white bg-opacity-60 hover:bg-opacity-80 rounded-lg transition-colors duration-200">
+          <button className="px-3 py-1 bg-white bg-opacity-60 dark:bg-dark-bg-secondary dark:bg-opacity-60 hover:bg-opacity-80 dark:hover:bg-opacity-80 rounded-lg transition-colors duration-200 text-gray-700 dark:text-dark-text-primary">
             📝 Personalize your invitation
           </button>
-          <button className="px-3 py-1 bg-white bg-opacity-60 hover:bg-opacity-80 rounded-lg transition-colors duration-200">
+          <button className="px-3 py-1 bg-white bg-opacity-60 dark:bg-dark-bg-secondary dark:bg-opacity-60 hover:bg-opacity-80 dark:hover:bg-opacity-80 rounded-lg transition-colors duration-200 text-gray-700 dark:text-dark-text-primary">
             📤 Upload CSV
           </button>
         </div>
       </div>
 
       {/* Team Members List */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-base font-semibold text-gray-900">Team Members</h3>
+      <div className="bg-white dark:bg-dark-bg-secondary border border-gray-200 dark:border-dark-bg-tertiary rounded-xl overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-dark-bg-tertiary bg-gray-50 dark:bg-dark-bg-tertiary">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-dark-text-primary">Team Members</h3>
         </div>
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 dark:divide-dark-bg-tertiary">
           {[
             { name: "Josh Achiam", email: "josh@openai.com", role: "Can view", date: "Jan 6, 2025", avatar: "J" },
             { name: "Amie Ross (You)", email: "amie@acme.com", role: "Owner", date: "Nov 2, 2024", avatar: "A" },
             { name: "Oliver House", email: "oliver@acme.com", role: "Member", date: "Jan 24, 2025", avatar: "O" },
             { name: "Diana Mounter", email: "diana@acme.com", role: "Member", date: "Jan 22, 2025", avatar: "D" },
           ].map((member, index) => (
-            <div key={index} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-200">
+            <div key={index} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary transition-colors duration-200">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
                   {member.avatar}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{member.name}</p>
-                  <p className="text-xs text-gray-500">{member.email}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-dark-text-primary">{member.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-dark-text-secondary">{member.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-6">
-                <span className="text-xs text-gray-500">{member.date}</span>
+                <span className="text-xs text-gray-500 dark:text-dark-text-secondary">{member.date}</span>
                 <span className={classNames(
                   "px-2 py-1 rounded-lg text-xs font-medium",
-                  member.role === "Owner" ? "bg-purple-100 text-purple-700" :
-                  member.role === "Member" ? "bg-blue-100 text-blue-700" :
-                  member.role === "Guest" ? "bg-gray-100 text-gray-700" :
-                  "bg-green-100 text-green-700"
+                  member.role === "Owner" ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300" :
+                  member.role === "Member" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" :
+                  member.role === "Guest" ? "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300" :
+                  "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
                 )}>{member.role}</span>
-                <button className="text-gray-400 hover:text-gray-600">⋯</button>
+                <button className="text-gray-400 dark:text-dark-text-secondary hover:text-gray-600 dark:hover:text-dark-text-primary">⋯</button>
               </div>
             </div>
           ))}
@@ -735,12 +735,12 @@ export function SettingsLayout() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Billing</h1>
-                <p className="text-gray-600 mt-1">Manage your plan and billing history here.</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text-primary">Billing</h1>
+                <p className="text-gray-600 dark:text-dark-text-secondary mt-1">Manage your plan and billing history here.</p>
               </div>
               <div className="relative">
-                <button className="p-2 hover:bg-gray-100 rounded-lg">
-                  <MoreHorizontal className="h-5 w-5" />
+                <button className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary rounded-lg">
+                  <MoreHorizontal className="h-5 w-5 text-gray-600 dark:text-dark-text-primary" />
                 </button>
               </div>
             </div>
@@ -748,20 +748,20 @@ export function SettingsLayout() {
             {/* Pricing Plans */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {plans.map((plan) => (
-                <div key={plan.name} className="relative bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                <div key={plan.name} className="relative bg-white dark:bg-dark-bg-secondary border border-gray-200 dark:border-dark-bg-tertiary rounded-xl p-6 shadow-sm">
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
-                      <p className="text-sm text-gray-600">{plan.description}</p>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary">{plan.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-dark-text-secondary">{plan.description}</p>
                     </div>
                     <div className="flex items-baseline">
-                      <span className="text-3xl font-bold">${plan.price}</span>
-                      <span className="text-gray-600 ml-2">per month</span>
+                      <span className="text-3xl font-bold text-gray-900 dark:text-dark-text-primary">${plan.price}</span>
+                      <span className="text-gray-600 dark:text-dark-text-secondary ml-2">per month</span>
                     </div>
                     <button
                       className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                         plan.isCurrent
-                          ? "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300"
+                          ? "bg-gray-100 dark:bg-dark-bg-tertiary text-gray-600 dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-dark-bg-tertiary"
                           : "bg-blue-600 hover:bg-blue-700 text-white"
                       }`}
                     >
@@ -773,27 +773,27 @@ export function SettingsLayout() {
             </div>
 
             {/* Billing History */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="p-6 border-b border-gray-200">
+            <div className="bg-white dark:bg-dark-bg-secondary rounded-lg border border-gray-200 dark:border-dark-bg-tertiary shadow-sm">
+              <div className="p-6 border-b border-gray-200 dark:border-dark-bg-tertiary">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">
-                    Billing history <span className="text-gray-500 font-normal">44</span>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-text-primary">
+                    Billing history <span className="text-gray-500 dark:text-dark-text-secondary font-normal">44</span>
                   </h2>
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-dark-text-secondary h-4 w-4" />
                       <input
                         placeholder="Search"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        className="pl-10 w-64 px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary dark:bg-dark-bg-primary dark:text-dark-text-primary rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder:text-gray-400 dark:placeholder:text-dark-text-secondary"
                       />
                     </div>
-                    <button className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                    <button className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary rounded-lg hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary text-sm text-gray-700 dark:text-dark-text-primary">
                       <Filter className="h-4 w-4" />
                       Filters
                     </button>
-                    <button className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                    <button className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-dark-bg-tertiary rounded-lg hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary text-sm text-gray-700 dark:text-dark-text-primary">
                       <Download className="h-4 w-4" />
                       Download all
                     </button>
@@ -804,57 +804,57 @@ export function SettingsLayout() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200">
+                    <tr className="border-b border-gray-200 dark:border-dark-bg-tertiary">
                       <th className="w-12 px-6 py-3 text-left">
                         <input
                           type="checkbox"
                           checked={selectedInvoices.length === invoices.length}
                           onChange={(e) => handleSelectAll(e.target.checked)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-gray-300 dark:border-dark-bg-tertiary text-blue-600 focus:ring-blue-500 dark:bg-dark-bg-primary"
                         />
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">Invoice</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">
                         <div className="flex items-center gap-1">
                           Billing date
                           <ChevronDownIcon className="h-4 w-4" />
                         </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Users</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">Plan</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">Users</th>
                       <th className="w-12 px-6 py-3"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-dark-bg-tertiary">
                     {filteredInvoices.map((invoice) => (
-                      <tr key={invoice.id} className="hover:bg-gray-50">
+                      <tr key={invoice.id} className="hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary">
                         <td className="px-6 py-4">
                           <input
                             type="checkbox"
                             checked={selectedInvoices.includes(invoice.id)}
                             onChange={(e) => handleSelectInvoice(invoice.id, e.target.checked)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-gray-300 dark:border-dark-bg-tertiary text-blue-600 focus:ring-blue-500 dark:bg-dark-bg-primary"
                           />
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
-                              <FileText className="h-4 w-4 text-red-600" />
+                            <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded flex items-center justify-center">
+                              <FileText className="h-4 w-4 text-red-600 dark:text-red-400" />
                             </div>
-                            <span className="font-medium text-sm">{invoice.id}</span>
+                            <span className="font-medium text-sm text-gray-900 dark:text-dark-text-primary">{invoice.id}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{invoice.date}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600 dark:text-dark-text-secondary">{invoice.date}</td>
                         <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                             {invoice.plan}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{invoice.users}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600 dark:text-dark-text-secondary">{invoice.users}</td>
                         <td className="px-6 py-4">
                           <div className="relative">
-                            <button className="p-1 hover:bg-gray-100 rounded">
-                              <MoreHorizontal className="h-4 w-4" />
+                            <button className="p-1 hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary rounded">
+                              <MoreHorizontal className="h-4 w-4 text-gray-600 dark:text-dark-text-secondary" />
                             </button>
                           </div>
                         </td>
@@ -868,11 +868,11 @@ export function SettingsLayout() {
         );
       case "integrations":
         return (
-          <div className="max-w-5xl mx-auto px-6 py-8 bg-white min-h-screen">
+          <div className="max-w-5xl mx-auto px-6 py-8 bg-white dark:bg-dark-bg-primary min-h-screen">
             {/* Header */}
             <div className="mb-10">
-              <h1 className="text-3xl font-semibold text-gray-900 mb-3 tracking-tight">Add integrations</h1>
-              <p className="text-gray-500 text-lg">Supercharge your workflow and connect the tool you use every day.</p>
+              <h1 className="text-3xl font-semibold text-gray-900 dark:text-dark-text-primary mb-3 tracking-tight">Add integrations</h1>
+              <p className="text-gray-500 dark:text-dark-text-secondary text-lg">Supercharge your workflow and connect the tool you use every day.</p>
             </div>
 
             {/* Filter tabs */}
@@ -883,15 +883,15 @@ export function SettingsLayout() {
                     key={category}
                     className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
                       index === 0
-                        ? "bg-gray-900 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-150 hover:text-gray-700"
+                        ? "bg-gray-900 dark:bg-gray-800 text-white shadow-sm"
+                        : "bg-gray-100 dark:bg-dark-bg-secondary text-gray-600 dark:text-dark-text-secondary hover:bg-gray-150 dark:hover:bg-dark-bg-tertiary hover:text-gray-700 dark:hover:text-dark-text-primary"
                     }`}
                   >
                     {category}
                   </button>
                 ))}
               </div>
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-150 transition-all duration-200">
+              <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-dark-bg-secondary rounded-full text-sm font-medium text-gray-600 dark:text-dark-text-secondary hover:bg-gray-150 dark:hover:bg-dark-bg-tertiary transition-all duration-200">
                 <MoreHorizontal className="w-4 h-4" />
                 <span>Recent</span>
               </button>
@@ -902,33 +902,33 @@ export function SettingsLayout() {
               {integrations.map((integration, index) => (
                 <div
                   key={integration.name}
-                  className="flex items-center justify-between px-6 py-5 bg-gray-50/50 rounded-2xl hover:bg-gray-50 transition-all duration-200 border border-gray-100/50"
+                  className="flex items-center justify-between px-6 py-5 bg-gray-50/50 dark:bg-dark-bg-secondary/50 rounded-2xl hover:bg-gray-50 dark:hover:bg-dark-bg-secondary transition-all duration-200 border border-gray-100/50 dark:border-dark-bg-tertiary/50"
                 >
                   <div className="flex items-center gap-4">
                     {getIconComponent(integration.icon)}
 
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
-                        <h3 className="font-semibold text-gray-900 text-lg">{integration.name}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-dark-text-primary text-lg">{integration.name}</h3>
                         {integration.isNew && (
-                          <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full border border-blue-100">
+                          <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-xs font-semibold rounded-full border border-blue-100 dark:border-blue-800">
                             NEW
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-500 text-sm leading-relaxed max-w-2xl">{integration.description}</p>
+                      <p className="text-gray-500 dark:text-dark-text-secondary text-sm leading-relaxed max-w-2xl">{integration.description}</p>
                     </div>
                   </div>
 
                   {/* Connect button or Connected status */}
                   <div className="flex-shrink-0">
                     {integration.isConnected ? (
-                      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl font-medium text-sm">
+                      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-gray-800 text-white rounded-xl font-medium text-sm">
                         <Check className="w-4 h-4" />
                         <span>Connected</span>
                       </div>
                     ) : (
-                      <button className="px-6 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-medium text-sm">
+                      <button className="px-6 py-2.5 border border-gray-200 dark:border-dark-bg-tertiary text-gray-700 dark:text-dark-text-primary rounded-xl hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 font-medium text-sm">
                         Connect
                       </button>
                     )}
@@ -937,20 +937,20 @@ export function SettingsLayout() {
               ))}
 
               {/* Partially visible blurred integration at bottom */}
-              <div className="flex items-center justify-between px-6 py-5 bg-gray-50/30 rounded-2xl border border-gray-100/30 opacity-40 blur-sm">
+              <div className="flex items-center justify-between px-6 py-5 bg-gray-50/30 dark:bg-dark-bg-secondary/30 rounded-2xl border border-gray-100/30 dark:border-dark-bg-tertiary/30 opacity-40 blur-sm">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-orange-200 flex items-center justify-center">
-                    <div className="w-6 h-6 bg-orange-400 rounded-sm"></div>
+                  <div className="w-12 h-12 rounded-xl bg-orange-200 dark:bg-orange-800 flex items-center justify-center">
+                    <div className="w-6 h-6 bg-orange-400 dark:bg-orange-600 rounded-sm"></div>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                      <h3 className="font-semibold text-gray-400 text-lg">Linear</h3>
+                      <h3 className="font-semibold text-gray-400 dark:text-dark-text-tertiary text-lg">Linear</h3>
                     </div>
-                    <p className="text-gray-400 text-sm">The issue tracking tool you'll enjoy using</p>
+                    <p className="text-gray-400 dark:text-dark-text-tertiary text-sm">The issue tracking tool you'll enjoy using</p>
                   </div>
                 </div>
                 <div className="flex-shrink-0">
-                  <button className="px-6 py-2.5 border border-gray-200/50 text-gray-400 rounded-xl font-medium text-sm">
+                  <button className="px-6 py-2.5 border border-gray-200/50 dark:border-dark-bg-tertiary/50 text-gray-400 dark:text-dark-text-tertiary rounded-xl font-medium text-sm">
                     Connect
                   </button>
                 </div>
@@ -962,11 +962,11 @@ export function SettingsLayout() {
         return (
           <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Settings</h2>
-              <p className="text-sm text-gray-600">This section is coming soon.</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-2">Settings</h2>
+              <p className="text-sm text-gray-600 dark:text-dark-text-secondary">This section is coming soon.</p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-              <p className="text-sm text-gray-500">Settings for {activeSection} will be available here.</p>
+            <div className="bg-white dark:bg-dark-bg-secondary border border-gray-200 dark:border-dark-bg-tertiary rounded-xl p-6 shadow-sm">
+              <p className="text-sm text-gray-500 dark:text-dark-text-secondary">Settings for {activeSection} will be available here.</p>
             </div>
           </div>
         );

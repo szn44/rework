@@ -280,7 +280,7 @@ export function ResizableNav({ user }: ResizableNavProps) {
       <div
         ref={navRef}
         className={classNames(
-          "relative h-full transition-all duration-300 ease-out flex flex-col bg-gray-50 dark:bg-dark-bg-secondary",
+          "relative h-full transition-all duration-300 ease-out flex flex-col bg-gray-50 dark:bg-dark-bg-nav",
           {
             "shadow-sm shadow-gray-300/20": isResizing,
           }
@@ -294,8 +294,13 @@ export function ResizableNav({ user }: ResizableNavProps) {
               <div className="relative">
                 <img 
                   src="/rework_dark.png" 
-                  alt="Play Logo" 
-                  className="w-18 h-9 transition-all duration-300 group-hover:scale-110 drop-shadow-sm"
+                  alt="Rework Logo" 
+                  className="w-18 h-9 transition-all duration-300 group-hover:scale-110 drop-shadow-sm block dark:hidden"
+                />
+                <img 
+                  src="/rework_light.png" 
+                  alt="Rework Logo" 
+                  className="w-18 h-9 transition-all duration-300 group-hover:scale-110 drop-shadow-sm hidden dark:block"
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 -z-10 blur-sm" />
               </div>
@@ -308,7 +313,7 @@ export function ResizableNav({ user }: ResizableNavProps) {
               <button
                 onClick={handleCreateIssue}
                 disabled={creating}
-                className="bg-gray-800 hover:bg-gray-900 text-white rounded-lg p-1.5 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg p-1.5 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Create Issue"
               >
                 {creating ? (
@@ -322,7 +327,7 @@ export function ResizableNav({ user }: ResizableNavProps) {
         </div>
 
         {/* Main Navigation Items */}
-        <div className="flex-1 px-2 pt-2 pb-2 space-y-0.5 overflow-y-auto border-r border-gray-200 dark:border-dark-bg-tertiary">
+        <div className="flex-1 px-2 pt-2 pb-2 space-y-0.5 overflow-y-auto">
           {/* Top Nav: Inbox, Issues, Agents */}
           <div className="mb-4">
             {mainNavItems.map((item) => {
@@ -416,7 +421,7 @@ export function ResizableNav({ user }: ResizableNavProps) {
         </div>
 
         {/* User Profile */}
-        <div className="border-t border-gray-200/60 bg-gray-100/40">
+        <div className="bg-gray-100/40 dark:bg-dark-bg-primary">
           <Link
             href="/settings"
             className={classNames(
@@ -465,7 +470,7 @@ export function ResizableNav({ user }: ResizableNavProps) {
             )}
             onMouseDown={handleMouseDown}
           >
-            <div className="absolute top-1/2 right-0 w-3 h-12 -translate-y-1/2 translate-x-1 bg-gradient-to-b from-gray-300 to-gray-400 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center shadow-sm">
+            <div className="absolute top-1/2 right-0 w-3 h-12 -translate-y-1/2 translate-x-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center shadow-sm">
               <div className="w-0.5 h-6 bg-gray-600 rounded-full" />
             </div>
           </div>

@@ -37,7 +37,7 @@ export function IssueProject({
   if (loading) {
     return (
       <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap min-h-[26px] pointer-events-none">
-        <div className="text-neutral-400">Loading spaces...</div>
+        <div className="text-neutral-400 dark:text-dark-text-secondary">Loading spaces...</div>
       </div>
     );
   }
@@ -45,7 +45,7 @@ export function IssueProject({
   if (!issue) {
     return (
       <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap min-h-[26px] pointer-events-none">
-        <div className="text-neutral-400">Loading issue...</div>
+        <div className="text-neutral-400 dark:text-dark-text-secondary">Loading issue...</div>
       </div>
     );
   }
@@ -91,14 +91,14 @@ export function IssueProject({
   return (
     <div className="text-sm flex gap-1.5 justify-start items-start font-medium max-w-full flex-wrap min-h-[26px]">
       {selectedSpace && (
-        <div className="text-sm font-medium rounded-full px-2 py-0.5 border shadow-xs flex items-center gap-1.5 select-none text-neutral-700">
+        <div className="text-sm font-medium rounded-full px-2 py-0.5 border shadow-xs flex items-center gap-1.5 select-none text-neutral-700 dark:text-neutral-300 bg-white dark:bg-dark-bg-secondary border-neutral-200 dark:border-dark-bg-tertiary">
           <div 
             className="rounded-full w-2 h-2" 
             style={{ backgroundColor: selectedSpace.color }}
           />
           {selectedSpace.name}
           <button
-            className="text-base leading-none pb-0.5 text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="text-base leading-none pb-0.5 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
             onClick={handleRemoveSpace}
           >
             ×

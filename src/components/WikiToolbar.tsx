@@ -132,12 +132,12 @@ export function WikiToolbar() {
   };
 
   return (
-    <div className="sticky top-0 z-10 bg-white border-b border-neutral-200 p-3 mb-4">
+    <div className="sticky top-0 z-10 bg-white dark:bg-dark-bg-primary border-b border-neutral-200 dark:border-dark-bg-tertiary p-3 mb-4">
       <div className="flex flex-wrap items-center gap-2">
         {/* Block Type Selector */}
         <div className="flex items-center gap-1 mr-4">
           <select
-            className="px-3 py-1.5 text-sm border border-neutral-200 rounded-md bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+            className="px-3 py-1.5 text-sm border border-neutral-200 dark:border-dark-bg-tertiary rounded-md bg-white dark:bg-dark-bg-secondary hover:bg-neutral-50 dark:hover:bg-dark-bg-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-neutral-900 dark:text-dark-text-primary"
             value={blockType}
             onChange={(e) => {
               const value = e.target.value;
@@ -185,7 +185,7 @@ export function WikiToolbar() {
             className={`p-2 rounded-md text-sm font-medium transition-colors ${
               isBold
                 ? "bg-accent text-white"
-                : "text-neutral-700 hover:bg-neutral-100"
+                : "text-neutral-700 dark:text-dark-text-primary hover:bg-neutral-100 dark:hover:bg-dark-bg-tertiary"
             }`}
             aria-label="Format Bold"
           >
@@ -198,7 +198,7 @@ export function WikiToolbar() {
             className={`p-2 rounded-md text-sm font-medium transition-colors ${
               isItalic
                 ? "bg-accent text-white"
-                : "text-neutral-700 hover:bg-neutral-100"
+                : "text-neutral-700 dark:text-dark-text-primary hover:bg-neutral-100 dark:hover:bg-dark-bg-tertiary"
             }`}
             aria-label="Format Italic"
           >
@@ -211,7 +211,7 @@ export function WikiToolbar() {
             className={`p-2 rounded-md text-sm font-medium transition-colors ${
               isUnderline
                 ? "bg-accent text-white"
-                : "text-neutral-700 hover:bg-neutral-100"
+                : "text-neutral-700 dark:text-dark-text-primary hover:bg-neutral-100 dark:hover:bg-dark-bg-tertiary"
             }`}
             aria-label="Format Underline"
           >
@@ -224,7 +224,7 @@ export function WikiToolbar() {
             className={`p-2 rounded-md text-sm font-medium transition-colors ${
               isStrikethrough
                 ? "bg-accent text-white"
-                : "text-neutral-700 hover:bg-neutral-100"
+                : "text-neutral-700 dark:text-dark-text-primary hover:bg-neutral-100 dark:hover:bg-dark-bg-tertiary"
             }`}
             aria-label="Format Strikethrough"
           >
@@ -237,7 +237,7 @@ export function WikiToolbar() {
             className={`p-2 rounded-md text-sm font-medium transition-colors ${
               isCode
                 ? "bg-accent text-white"
-                : "text-neutral-700 hover:bg-neutral-100"
+                : "text-neutral-700 dark:text-dark-text-primary hover:bg-neutral-100 dark:hover:bg-dark-bg-tertiary"
             }`}
             aria-label="Format Code"
           >
@@ -252,7 +252,7 @@ export function WikiToolbar() {
             className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
               blockType === "bullet"
                 ? "bg-accent text-white"
-                : "text-neutral-700 hover:bg-neutral-100 border border-neutral-200"
+                : "text-neutral-700 dark:text-dark-text-primary hover:bg-neutral-100 dark:hover:bg-dark-bg-tertiary border border-neutral-200 dark:border-dark-bg-tertiary"
             }`}
           >
             • List
@@ -262,7 +262,7 @@ export function WikiToolbar() {
             className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
               blockType === "number"
                 ? "bg-accent text-white"
-                : "text-neutral-700 hover:bg-neutral-100 border border-neutral-200"
+                : "text-neutral-700 dark:text-dark-text-primary hover:bg-neutral-100 dark:hover:bg-dark-bg-tertiary border border-neutral-200 dark:border-dark-bg-tertiary"
             }`}
           >
             1. List
