@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.ico" type="image/x-icon" />
       </head>
-      <body className="bg-neutral-200/50 dark:bg-dark-bg-nav text-neutral-900 dark:text-dark-text-primary antialiased h-full w-full overflow-hidden transition-colors duration-200">
+      <body className="bg-neutral-200/50 dark:bg-[#0a0a0a] text-neutral-900 dark:text-dark-text-primary antialiased h-full w-full overflow-hidden transition-colors duration-200">
         <ThemeProvider>
           <AISidebarProvider>
             <NavigationProvider>
